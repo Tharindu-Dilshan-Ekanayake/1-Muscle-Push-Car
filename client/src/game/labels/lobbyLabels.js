@@ -1,4 +1,4 @@
-import { DUMBBELLS, EGGS, PETS, SHOP, TRAIN_ZONES, WORLD_PORTALS, WORLDS } from '@shared/balance'
+import { DUMBBELLS, EGGS, PETS, SHOP, TRAIN_ZONES, vehicleOf, WORLD_PORTALS, WORLDS } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 import { isZoneUnlocked } from '@shared/logic'
 import {
@@ -11,7 +11,7 @@ import {
   SHOP as SHOP_YARD,
   SPHINX_STAND,
   STATUE,
-  TRACK_START_Z,
+  START_VEHICLE,
   ZONE_X,
   zoneCenterZ,
 } from '@shared/world'
@@ -50,7 +50,8 @@ export function zoneLabelSpec(index, unlocked) {
     const word = zone.rebirths === 1 ? 'Rebirth' : 'Rebirths'
     lines.push({ text: `${zone.rebirths} ${word}`, size: 48, icon: 'rebirth', gradient: TEXT.green })
   }
-  return { lines, pxPerUnit: 46 }
+  // Small enough that neighbouring zones' labels, 8 m apart, never run into each other.
+  return { lines, pxPerUnit: 74 }
 }
 
 /** Largest a zone label can get, so its atlas slot fits every state. */
@@ -69,7 +70,7 @@ const zoneReserve = (index) => {
 export function zoneLabels(profile) {
   return TRAIN_ZONES.map((zone, i) => ({
     id: `zone-${i}`,
-    position: [ZONE_X + 1, zone.product ? 6.4 : 5.6, zoneCenterZ(i)],
+    position: [ZONE_X + 1, zone.product ? 5 : 4.4, zoneCenterZ(i)],
     spec: zoneLabelSpec(i, isZoneUnlocked(profile, i)),
     reserve: zoneReserve(i),
     fade: 150,
@@ -181,14 +182,14 @@ const title = (id, position, name, sub, gradient, fade = 120) => ({
   fade,
 })
 
-/** The section signs, the free reward, the portal, the statue's challenge and the boulder's. */
+/** The section signs, the free reward, the portal, the statue's challenge and the first car's. */
 function placeLabels() {
   const portal = PORTALS[0]
   return [
-    title('title-zones', [ZONE_X + 8.5, 2.6, zoneCenterZ(1) - 4.8], 'Train Zones', 'Sit on a bench for EXTRA MUSCLE!', TEXT.orange, 90),
+    title('title-zones', [ZONE_X + 7, 2.6, -1.5], 'Train Zones', 'Sit on a bench for EXTRA MUSCLE!', TEXT.orange, 90),
     title('title-dumbbells', [SHOP_YARD.minX + 1, 2.6, SHOP_YARD.maxZ + 1.5], 'Dumbbells', 'Buy and Equip DUMBBELLS!', TEXT.blue, 90),
-    title('title-auras', [AURA_STAND.x, 7.4, AURA_STAND.z - 3.2], 'Auras', 'Buy and Equip Auras!', TEXT.purple, 70),
-    title('title-potions', [POTION_STAND.x + 1, 5.6, POTION_STAND.z], 'Potions', 'Use and Buy Potions Here!', TEXT.green, 70),
+    title('title-auras', [AURA_STAND.x, 7.2, AURA_STAND.z - 1], 'Auras', 'Buy and Equip Auras!', TEXT.purple, 70),
+    title('title-potions', [POTION_STAND.x, 6.2, POTION_STAND.z - 0.4], 'Potions', 'Use and Buy Potions Here!', TEXT.green, 70),
     title('title-eggs', [0, 6.4, EGG_STANDS[0].z], 'Eggs', 'Hatch pets for more Muscle!', TEXT.gold, 80),
     {
       id: 'free-reward',
@@ -198,7 +199,7 @@ function placeLabels() {
     },
     {
       id: `portal-${portal.id}`,
-      position: [portal.x, portal.radius * 2 + 3, portal.z],
+      position: [portal.x, portal.radius * 2 + 6.4, portal.z],
       spec: portalLabelSpec(portal.id, 0),
       reserve: portalLabelSpec(portal.id, 0),
       fade: 140,
@@ -210,21 +211,21 @@ function placeLabels() {
       fade: 140,
     },
     {
-      id: 'start-boulder',
-      position: [0, 6.6, TRACK_START_Z + 0.5],
-      spec: startBoulderLabelSpec(),
-      // Room for the longest first boulder of any world.
-      reserve: startBoulderLabelSpec(WORLDS.map((w) => w.stages[0]).reduce((a, b) => (b.boulder.length > a.boulder.length ? b : a))),
+      id: 'start-vehicle',
+      position: [0, 5.2, START_VEHICLE.z],
+      spec: startVehicleLabelSpec(),
+      // Room for the longest name of any world's first vehicle.
+      reserve: startVehicleLabelSpec(WORLDS.map((w) => w.stages[0]).reduce((a, b) => (vehicleOf(b).name.length > vehicleOf(a).name.length ? b : a))),
       fade: 110,
     },
   ]
 }
 
-/** The start boulder's sign: the first boulder of the world you're in (or `first`). */
-export function startBoulderLabelSpec(first = STAGES[0]) {
+/** The start sign: the first vehicle of the world you're in (or of stage `first`). */
+export function startVehicleLabelSpec(first = STAGES[0]) {
   return {
     lines: [
-      { text: first.boulder, size: 50, gradient: TEXT.white },
+      { text: vehicleOf(first).name, size: 50, gradient: TEXT.white },
       { text: `${formatNumber(first.need)} Recommended`, size: 40, icon: 'muscle', gradient: TEXT.gold },
     ],
     pxPerUnit: 46,

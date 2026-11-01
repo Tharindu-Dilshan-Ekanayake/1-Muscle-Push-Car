@@ -31,11 +31,11 @@ function usePrompt() {
   const atAuras = useGame((s) => s.zone.auras)
   const atPotions = useGame((s) => s.zone.potions)
   const openPanel = useGame((s) => s.openPanel)
-  const atBoulder = useGame((s) => s.zone.pushZone)
-  const climbBoulder = useGame((s) => s.zone.climbBoulder)
+  const atVehicle = useGame((s) => s.zone.pushZone)
+  const climbVehicle = useGame((s) => s.zone.climbVehicle)
 
-  // At a boulder (the first in the plaza, the next in a SAFEZONE): hold to take it.
-  if (atBoulder || climbBoulder >= 0) return { action: 'Push', run: () => actions.startPush(), hold: true }
+  // At a vehicle (the first in the plaza, the next in a SAFEZONE): hold to take it.
+  if (atVehicle || climbVehicle >= 0) return { action: 'Push', run: () => actions.startPush(), hold: true }
 
   // A world portal: walking in is what takes you.
   if (atPortal) {
@@ -67,7 +67,7 @@ function usePrompt() {
   return null
 }
 
-/** Taking a boulder: how long E (or a finger on PUSH) is held while the ring fills. */
+/** Taking a vehicle: how long E (or a finger on PUSH) is held while the ring fills. */
 const HOLD_MS = 700
 
 const touch = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || navigator.maxTouchPoints > 0)
@@ -100,20 +100,20 @@ function HoldRing({ filling, inset, onDone }) {
 
 /**
  * Proximity prompt: a small pill in the middle of the screen, under your character - the
- * key to press and a word or two. E on keyboard; tap it on touch screens. A boulder's is
+ * key to press and a word or two. E on keyboard; tap it on touch screens. A vehicle's is
  * held, not pressed: a ring fills round the key while you hold it, and when it's full
- * the boulder's yours. On a touch screen that's a big PUSH button under your right thumb
+ * the vehicle's yours. On a touch screen that's a big PUSH button under your right thumb
  * instead (where LIFT is, which steps aside for it).
  */
 export function InteractPrompt() {
   const prompt = usePrompt()
-  // Up the mountain only the next boulder's prompt shows.
-  const busy = useGame((s) => Boolean(s.panel || (s.pushing && s.zone.climbBoulder < 0)))
+  // Up the mountain only the next vehicle's prompt shows.
+  const busy = useGame((s) => Boolean(s.panel || (s.pushing && s.zone.climbVehicle < 0)))
   const run = !busy ? prompt?.run : null
   const hold = Boolean(prompt?.hold)
   const [holding, setHolding] = useState(false)
   // The finger (or mouse) holding the prompt: only its lifting lets go, not another
-  // finger's - a thumb coming off the joystick mustn't drop the boulder.
+  // finger's - a thumb coming off the joystick mustn't drop the vehicle.
   const holdPointer = useRef(null)
 
   useEffect(() => {
@@ -176,7 +176,7 @@ export function InteractPrompt() {
         onContextMenu={(e) => e.preventDefault()}
       >
         <span className="pp-gloss" style={{ borderRadius: '52px 52px 30px 30px' }} />
-        <Icon name="boulder" size={54} />
+        <Icon name="car" size={54} />
         <span className="pp-stroke" style={{ fontSize: 18, marginTop: -4 }}>
           PUSH
         </span>

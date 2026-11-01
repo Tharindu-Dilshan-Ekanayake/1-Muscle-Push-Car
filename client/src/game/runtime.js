@@ -14,7 +14,7 @@ import { SPAWN } from '@shared/world'
 export const runtime = {
   player: {
     position: new Vector3(SPAWN.x, 0, SPAWN.z),
-    /** Facing, radians about +Y. PI faces north (-Z), towards the boulder. */
+    /** Facing, radians about +Y. PI faces north (-Z), towards the vehicle. */
     yaw: Math.PI,
     speed: 0,
     grounded: true,

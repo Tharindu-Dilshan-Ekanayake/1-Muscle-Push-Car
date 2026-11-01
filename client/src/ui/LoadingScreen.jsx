@@ -7,12 +7,13 @@ import StrokeText from './StrokeText'
 const TIPS = [
   'Every click gives you Muscle!',
   'Stand in a Train Zone to train automatically.',
-  'More Muscle = push the boulder further = more Wins!',
+  'More Muscle = push cars further = more Wins!',
   'Spend Wins on better dumbbells and eggs.',
   'Rebirth at max level for x1.5 more Muscle per rebirth.',
-  'WATCH OUT! If you are not strong enough, the boulder will CRUSH you!',
-  'Let go of the boulder and it rolls back to the last SAFEZONE.',
-  'Your power drains as you push. When it hits 0, the boulder rolls back on you!',
+  'WATCH OUT! If you are not strong enough, the car rolls back and CRUSHES you!',
+  'Let go of the car and it rolls back to the last SAFEZONE.',
+  'Your power drains as you push. When it hits 0, the truck rolls back on you!',
+  'Rusty wrecks, vans, buses and giant trucks: every road has a heavier ride!',
 ]
 
 /**
@@ -57,7 +58,7 @@ export function LoadingScreen({ done }) {
 
       <h1 className="m-0 text-center leading-none" style={{ fontSize: 'clamp(40px, 9vw, 96px)', transform: 'rotate(-3deg)' }}>
         <StrokeText stroke="0.16em" gradient="linear-gradient(180deg, #ffffff 0%, #ffffff 55%, #ffe36b 56%, #ffb21e 100%)">
-          +1 MUSCLE TO PUSH BOULDER
+          +1 MUSCLE TO PUSH CARS
         </StrokeText>
       </h1>
 

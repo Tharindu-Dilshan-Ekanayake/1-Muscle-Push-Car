@@ -1,25 +1,29 @@
+import { PUSH_START, VEHICLES, WORLDS } from './balance.js'
+
 /**
  * Lobby layout: every gameplay-relevant position and trigger area.
  *
  * Shared by the client (which renders it) and the server (which validates positions
- * against it), so the two can never disagree about where a Train Zone or the boulder is.
+ * against it), so the two can never disagree about where a Train Zone or the first car is.
  *
  * Units are roughly metres - the avatar is 1.8 tall. +X is east, -Z is north, which is
  * "forward" from spawn and the way up the mountain.
  *
- * Seen from spawn: the boulder and the track climbing between the cliffs straight ahead
- * (north), the Train Zones along the left (west) side, the dumbbell shop on the right
- * (east), eggs and leaderboards behind.
+ * A compact old town square, everything in sight from spawn: the first car and the road
+ * climbing away straight ahead (north) up Main Street, the Train Zones down the left
+ * (west) under their big TRAINING sign, the dumbbell shop on the right (east) under its
+ * DUMBBELLS sign, eggs and leaderboards behind (south). The aura and potion kiosks stand
+ * on the left of the road's gate, the Mega City portal on its right past the statue.
  *
  * Rects are `{ minX, maxX, minZ, maxZ }` on the ground plane.
  */
 
-export const SPAWN = { x: 0, z: 3 }
+export const SPAWN = { x: 0, z: 8 }
 
-/** The flat, walkable plaza. Mountains surround it on every side but the track. */
-export const PLAZA = { minX: -46, maxX: 46, minZ: -38, maxZ: 34 }
+/** The flat, walkable square. The town surrounds it on every side but the road. */
+export const PLAZA = { minX: -36, maxX: 36, minZ: -30, maxZ: 30 }
 
-// --- The boulder track ----------------------------------------------------------------
+// --- The road up the mountain ----------------------------------------------------------------
 
 /**
  * The foot of the mountain: the plaza's north edge, where the track starts climbing.
@@ -32,17 +36,23 @@ export const SLOPE_ANGLE = 0.14
 export const TRACK_HALF_WIDTH = 3.8
 
 /**
- * The PUSH ZONE in front of the first boulder, at the foot of the track: walking onto it
+ * The PUSH ZONE in front of the first car, at the foot of the track: walking onto it
  * starts a push.
  */
 export const PUSH_ZONE = { minX: -3.4, maxX: 3.4, minZ: TRACK_START_Z, maxZ: TRACK_START_Z + 5 }
 /** Where you're put back after a push: a little way short of the zone, facing it. */
 export const PUSH_RETURN = { x: 0, z: TRACK_START_Z + 13 }
 /**
- * The boulder waiting at the start (its middle), and its radius on the ground: where the
- * client draws the first stage's (PUSH_START + its radius + 0.55 up the track).
+ * The car waiting at the start: its middle, and half its footprint. The client draws
+ * World 1's first vehicle there - PUSH_START + half its length + 0.55 up the track.
  */
-export const START_BOULDER = { x: 0, z: TRACK_START_Z + 0.45, radius: 1.5 }
+const START_CAR = VEHICLES[WORLDS[0].stages[0].vehicle]
+export const START_VEHICLE = {
+  x: 0,
+  z: TRACK_START_Z - (PUSH_START + START_CAR.length / 2 + 0.55),
+  halfX: START_CAR.width / 2,
+  halfZ: START_CAR.length / 2,
+}
 
 /** Walkable ground; the controller clamps the player into it. Nothing up the track. */
 export const WALKABLE = [PLAZA]
@@ -55,14 +65,14 @@ export const WALKABLE = [PLAZA]
  * (see BENCH_X). The gym equipment stands along its west edge.
  */
 export const ZONE_COUNT = 7
-export const ZONE_PITCH = 9.6
-export const ZONE_HALF = { x: 6, z: 4 }
-export const ZONE_X = -35
+export const ZONE_PITCH = 8.2
+export const ZONE_HALF = { x: 5.5, z: 3.6 }
+export const ZONE_X = -27.5
 /** The pad's top, a step up from the plaza. */
 export const ZONE_HEIGHT = 0.4
 /** The row of equipment along each pad's back (west) edge. */
 export const ZONE_RACK_X = ZONE_X - ZONE_HALF.x + 1.1
-const ZONE0_Z = 28
+const ZONE0_Z = 24.6
 
 export const zoneCenterZ = (index) => ZONE0_Z - index * ZONE_PITCH
 
@@ -113,20 +123,22 @@ export function zoneDeckRect(index) {
  * first ten dumbbells on the low front one and the next ten on the higher back one, and
  * a big DUMBBELLS sign behind. Both stages are low enough to walk straight onto.
  */
-export const SHOP = { minX: 16, maxX: 42, minZ: -26, maxZ: 12 }
+export const SHOP = { minX: 13, maxX: 35, minZ: -17, maxZ: 15 }
 export const SHOP_STAGES = [
-  { minX: 17.5, maxX: 28, minZ: -25, maxZ: 11, height: 0.5 },
-  { minX: 30.5, maxX: 41, minZ: -25, maxZ: 11, height: 1 },
+  { minX: 14, maxX: 23.6, minZ: -16, maxZ: 14, height: 0.5 },
+  { minX: 25, maxX: 34.4, minZ: -16, maxZ: 14, height: 1 },
 ]
-/** The sign along the back (east) edge, facing the plaza, high enough to clear the labels. */
-export const SHOP_SIGN = { x: 42.6, minZ: -23, maxZ: 9, top: 16 }
+/** The sign along the back (east) edge, facing the square, high enough to clear the labels. */
+export const SHOP_SIGN = { x: 35.2, minZ: -13, maxZ: 13, top: 15 }
+/** Its twin over the Train Zones: the big TRAINING sign along the west edge, facing the square. */
+export const TRAIN_SIGN = { x: -35.2, minZ: -13, maxZ: 13, top: 15 }
 export const PAD_SIZE = 4.4
 
 /** Rows of display stands, nearest the plaza first: two rows on each stage. */
-const PAD_ROWS_X = [20, 25.5, 33, 38.5]
+const PAD_ROWS_X = [16.4, 21.2, 27.4, 32]
 
 /**
- * Twenty stands, five to a row 7 m apart. `row` (0-3, front to back) lets the labels
+ * Twenty stands, five to a row 6 m apart. `row` (0-3, front to back) lets the labels
  * above them step up so nearer ones don't hide farther ones.
  */
 export const DUMBBELL_PADS = Array.from({ length: 20 }, (_, i) => {
@@ -135,7 +147,7 @@ export const DUMBBELL_PADS = Array.from({ length: 20 }, (_, i) => {
     index: i,
     row,
     x: PAD_ROWS_X[row],
-    z: (SHOP.minZ + SHOP.maxZ) / 2 - 14 + (i % 5) * 7,
+    z: (SHOP.minZ + SHOP.maxZ) / 2 - 12 + (i % 5) * 6,
     y: SHOP_STAGES[row < 2 ? 0 : 1].height,
   }
 })
@@ -151,35 +163,40 @@ export const padRect = (pad) => ({
 
 /** The egg row stands behind spawn, the leaderboards behind it. */
 export const EGG_STANDS = [
-  { eggId: 'basic', x: -12, z: 21 },
-  { eggId: 'meadow', x: -4, z: 21 },
-  { eggId: 'sunset', x: 4, z: 21 },
-  { eggId: 'unicorn', x: 12, z: 21 },
-  { eggId: 'demon', x: 21, z: 22, big: true },
+  { eggId: 'basic', x: -12, z: 20 },
+  { eggId: 'meadow', x: -4, z: 20 },
+  { eggId: 'sunset', x: 4, z: 20 },
+  { eggId: 'unicorn', x: 12, z: 20 },
+  { eggId: 'demon', x: 21, z: 21, big: true },
 ]
 export const EGG_TRIGGER_RADIUS = 4.2
 
 /** Limited premium pet on display. */
-export const SPHINX_STAND = { x: 37, z: 21 }
+export const SPHINX_STAND = { x: 29, z: 22 }
 
 export const LEADERBOARDS = [
-  { id: 'rebirths', x: -12, z: 30 },
-  { id: 'muscle', x: 0, z: 30 },
-  { id: 'height', x: 12, z: 30 },
+  { id: 'rebirths', x: -12, z: 27 },
+  { id: 'muscle', x: 0, z: 27 },
+  { id: 'height', x: 12, z: 27 },
 ]
 
-/** The Future World portal, out past the shop. Name and Wins are WORLD_PORTALS in balance.js. */
-export const PORTALS = [{ id: 'future', x: 28, z: -31, radius: 3.6 }]
+/** The Mega City portal, out past the shop. Name and Wins are WORLD_PORTALS in balance.js. */
+export const PORTALS = [{ id: 'future', x: 24, z: -24, radius: 3.6 }]
 
-/** The aura stand and the potion stand: walk up to them to open their panels. */
-export const AURA_STAND = { x: -19, z: -28, radius: 3.6 }
-export const POTION_STAND = { x: -19, z: 7, radius: 3.6 }
+/**
+ * The aura kiosk and the potion kiosk, side by side on the left of the road's gate,
+ * facing the square: walk up to them to open their panels.
+ */
+export const AURA_STAND = { x: -12, z: -26.5, radius: 3 }
+export const POTION_STAND = { x: -18.5, z: -26.5, radius: 3 }
 
-/** The big buff statue by the boulder, asking if you can reach the top. */
-export const STATUE = { x: 12, z: -34 }
+/** The big buff statue by the first car, asking if you can reach the top. */
+export const STATUE = { x: 9.5, z: -26 }
 
-export const FREE_REWARD = { x: 10, z: 7, radius: 3 }
-export const WATERFALL = { x: 38, z: -38 }
+export const FREE_REWARD = { x: 9, z: 12, radius: 3 }
+
+/** The old water tower over the north-east corner, outside the square. */
+export const WATER_TOWER = { x: 44, z: -38 }
 
 // --- Collision ----------------------------------------------------------------------
 
@@ -192,22 +209,23 @@ const box = (x, z, halfX, halfZ) => ({
 
 /** Solid, never-changing obstacles. Locked Train Zones add their own walls at runtime. */
 export const STATIC_COLLIDERS = [
-  // The shop's sign.
-  { minX: SHOP_SIGN.x - 0.5, maxX: SHOP_SIGN.x + 0.5, minZ: SHOP_SIGN.minZ - 0.5, maxZ: SHOP_SIGN.maxZ + 0.5 },
+  // The shop's sign, and the TRAINING sign.
+  ...[SHOP_SIGN, TRAIN_SIGN].map((s) => ({ minX: s.x - 0.5, maxX: s.x + 0.5, minZ: s.minZ - 0.5, maxZ: s.maxZ + 0.5 })),
   // Egg pedestals.
   ...EGG_STANDS.map((s) => box(s.x, s.z, s.big ? 2.1 : 1.6, s.big ? 2.1 : 1.6)),
   box(SPHINX_STAND.x, SPHINX_STAND.z, 3, 3),
   ...LEADERBOARDS.map((b) => box(b.x, b.z, 4.6, 0.5)),
   box(FREE_REWARD.x, FREE_REWARD.z, 1.4, 1.4),
-  // Each portal ring's base; the swirl itself is walk-through.
+  // Each portal ring's base, and the brick archway's pillars round it; the swirl itself is walk-through.
   ...PORTALS.flatMap((p) => [box(p.x - p.radius, p.z, 0.6, 0.8), box(p.x + p.radius, p.z, 0.6, 0.8)]),
+  ...PORTALS.flatMap((p) => [box(p.x - p.radius - 1.5, p.z, 0.8, 1), box(p.x + p.radius + 1.5, p.z, 0.8, 1)]),
   // The stands' counters.
-  box(AURA_STAND.x, AURA_STAND.z - 1.2, 2.95, 0.8),
-  box(AURA_STAND.x, AURA_STAND.z - 3.5, 4.4, 0.45),
-  box(POTION_STAND.x - 1.2, POTION_STAND.z, 0.9, 2.6),
+  box(AURA_STAND.x, AURA_STAND.z - 0.6, 2.1, 0.55),
+  box(AURA_STAND.x, AURA_STAND.z - 2.4, 3.1, 0.35),
+  box(POTION_STAND.x, POTION_STAND.z - 0.4, 2, 0.9),
   box(STATUE.x, STATUE.z, 2.2, 2.2),
-  // The boulder waiting at the start.
-  box(START_BOULDER.x, START_BOULDER.z, START_BOULDER.radius - 0.2, START_BOULDER.radius - 0.5),
+  // The car waiting at the start.
+  box(START_VEHICLE.x, START_VEHICLE.z, START_VEHICLE.halfX - 0.1, START_VEHICLE.halfZ - 0.2),
   // The cliffs either side of the track's foot.
   { minX: PLAZA.minX, maxX: -TRACK_HALF_WIDTH - 1, minZ: PLAZA.minZ - 1, maxZ: PLAZA.minZ + 0.6 },
   { minX: TRACK_HALF_WIDTH + 1, maxX: PLAZA.maxX, minZ: PLAZA.minZ - 1, maxZ: PLAZA.minZ + 0.6 },

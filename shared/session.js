@@ -12,6 +12,7 @@ import {
   SHOP,
   TRAIN_INTERVAL,
   TRAIN_ZONES,
+  vehicleOf,
   WIN_PAD,
   WORLD_PORTALS,
 } from './balance.js'
@@ -83,7 +84,7 @@ const TRACK_X = TRACK_HALF_WIDTH - 1
  * - 'train'      { source, zone, gain, muscle, level, leveledUp, maxed }  each Muscle
  *                  gain; `source` is 'lift' (a click) or 'zone' (training in Train
  *                  Zone `zone`). Walking earns nothing.
- * - 'push'       { stage, reach, power, start, x }  you've taken stage `stage`'s boulder:
+ * - 'push'       { stage, reach, power, start, x }  you've taken stage `stage`'s vehicle:
  *                  your power (your Muscle now) and how far it pushes it before it runs out
  * - 'pushReward' { wins, stage, top }  Wins for the WINS pad just walked onto
  * - 'orb'        { index, wins }  Wins for the Wins orb just pushed into
@@ -93,7 +94,7 @@ const TRACK_X = TRACK_HALF_WIDTH - 1
  * - 'hatch'      { eggId, pets: [{ uid, id }] }  pets to reveal
  * - 'badge'      { id, name }
  *
- * A climb up the mountain alternates between pushing a stage's boulder ('push') and
+ * A climb up the mountain alternates between pushing a stage's vehicle ('push') and
  * walking about a SAFEZONE without one ('free'). `onPush(push | null)` lets the host
  * show other players where someone is on it.
  */
@@ -120,7 +121,7 @@ export class PlayerSession {
     /**
      * The climb in progress: { phase: 'push' | 'free', stage, startedAt, start, power,
      * reach, meter, x, lastReportAt, lastMoveAt, paidPads }. Pushing, `stage` is the
-     * boulder's; free, it's the stage the SAFEZONE leads up to.
+     * vehicle's; free, it's the stage the SAFEZONE leads up to.
      */
     this.push = null
     /** Wins earned climbing (WINS pads and orbs) not yet counted towards a leaderboard. */
@@ -208,7 +209,7 @@ export class PlayerSession {
     },
 
     /**
-     * Takes a stage's boulder: the first from the PUSH ZONE in the plaza, each one after
+     * Takes a stage's vehicle: the first from the PUSH ZONE in the plaza, each one after
      * from the SAFEZONE below it, standing by it. Its power is all your Muscle now.
      */
     startPush(_payload, now) {
@@ -258,7 +259,7 @@ export class PlayerSession {
 
     /**
      * Where the climber has got to. Pushing, trusted only as far as they could really
-     * have got: no further than their power pushes the boulder, nor than pushing flat
+     * have got: no further than their power pushes the vehicle, nor than pushing flat
      * out since they took it could take them; over the top of the slope they're free in
      * the SAFEZONE above. Free, only within that SAFEZONE and at walking pace. A WINS pad
      * stood on cashes the climb in: it pays for everything climbed, and the climb's over.
@@ -312,7 +313,7 @@ export class PlayerSession {
     },
 
     /**
-     * A Wins orb the boulder's rolled into: paid at once, once a climb - if the climb's
+     * A Wins orb your vehicle's driven into: paid at once, once a climb - if the climb's
      * really by it: pushing up its stage, just short of it, on its side of the track.
      */
     collectOrb({ index }, now) {
@@ -320,7 +321,8 @@ export class PlayerSession {
       if (!climb || climb.phase !== 'push') return
       const orb = TRACKS[climb.world].orbs[Number(index)]
       if (!orb || orb.stage !== climb.stage || climb.orbs.includes(orb.index)) return
-      if (orb.meter < climb.meter - 3 || orb.meter > climb.meter + 7 || climb.x * orb.side < -0.25) return
+      const reach = vehicleOf(TRACKS[climb.world].stages[orb.stage]).length + 1.55
+      if (orb.meter < climb.meter - 3 || orb.meter > climb.meter + reach || climb.x * orb.side < -0.25) return
       climb.orbs.push(orb.index)
       const wins = Math.max(1, Math.round(orb.wins * winsMultiplier(this.profile, now)))
       this.profile.wins += wins

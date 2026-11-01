@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-import { TUTORIAL } from '@shared/balance'
+import { TUTORIAL, vehicleOf } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 
 import { isSlope, STAGES, stageAt, TRACK_LENGTH } from '../../game/push/course'
@@ -143,7 +143,7 @@ function Banner() {
           </StrokeText>
         </span>
         <span className="flex items-center" style={{ fontSize: u(44), gap: u(8) }}>
-          <StrokeText stroke={u(9)}>{`The ${stage.boulder} needs`}</StrokeText>
+          <StrokeText stroke={u(9)}>{`The ${vehicleOf(stage).name} needs`}</StrokeText>
           <Icon name="muscle" size={u(56)} />
           <StrokeText stroke={u(9)} gradient={GRADIENTS.gold}>
             {formatNumber(banner.need)}
@@ -176,12 +176,12 @@ function Banner() {
 /** In a SAFEZONE: what to do next. */
 function FreeHint() {
   const free = useGame((s) => s.climb === 'free')
-  const atBoulder = useGame((s) => s.zone.climbBoulder >= 0)
+  const atVehicle = useGame((s) => s.zone.climbVehicle >= 0)
   // Cashing in on a WINS pad (its banner's up): you're on your way back to the lobby.
   const cashing = useGame((s) => s.pushBanner?.kind === 'clear')
   // Only the guide says what to do up here: a new player, to take the Wins.
   const guiding = useGame((s) => TUTORIAL[s.profile.tutorialStep]?.event === 'cashIn')
-  if (!free || atBoulder || cashing || !guiding) return null
+  if (!free || atVehicle || cashing || !guiding) return null
   return (
     // Down at the bottom over the Lobby button, clear of the signs up the track and the HUD at the top.
     <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-center" style={{ bottom: u(124), fontSize: u(32) }}>

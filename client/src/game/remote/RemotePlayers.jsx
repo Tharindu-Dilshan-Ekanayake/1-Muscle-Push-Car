@@ -60,7 +60,7 @@ function writeNameplate(plate, name, at, distance, maxDistance, camera, size) {
 /**
  * Everyone else: where they are (interpolated from the server's 10 Hz updates), their
  * name tags, shadows and pets (handed to the shared pet renderer). Up the mountain
- * they're where the server says: behind their boulder while they push it (Boulders draws
+ * they're where the server says: behind their vehicle while they push it (Vehicles draws
  * that), walking about a SAFEZONE between pushes. Their bodies are their real avatars
  * (RemoteAvatars).
  */

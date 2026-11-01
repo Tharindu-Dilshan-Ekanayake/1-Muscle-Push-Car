@@ -1,3 +1,4 @@
+import { vehicleOf } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 
 import { pressRespawn } from '../../bloxity/deathScreen'
@@ -10,7 +11,7 @@ import { GRADIENTS, u } from './style'
 
 /**
  * Crushed: the game's own death card, in the middle of the screen (Boxity keeps the
- * edges for its ads): what that boulder needs, and a Respawn button that unlocks when
+ * edges for its ads): what that vehicle needs, and a Respawn button that unlocks when
  * Boxity's countdown is over - the number on it until then. It stays up until Respawn
  * is clicked (no key does it: a jump while you're down mustn't respawn you). Respawning
  * takes you back to the lobby.
@@ -30,7 +31,7 @@ export function DeathCard() {
       </span>
       {stage && (
         <span className="flex items-center" style={{ fontSize: u(44), gap: u(8) }}>
-          <StrokeText stroke={u(9)}>{`The ${stage.boulder} needs`}</StrokeText>
+          <StrokeText stroke={u(9)}>{`The ${vehicleOf(stage).name} needs`}</StrokeText>
           <Icon name="muscle" size={u(56)} />
           <StrokeText stroke={u(9)} gradient={GRADIENTS.gold}>
             {formatNumber(death.need)}

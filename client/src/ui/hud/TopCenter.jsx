@@ -11,17 +11,17 @@ const touch = typeof window !== 'undefined' && (window.matchMedia?.('(pointer: c
 
 /**
  * What the guide tells a new player right now - its step, with the Muscle to train up
- * to where it asks for some, and how to take the boulder when you're at it - until the
+ * to where it asks for some, and how to take the car when you're at it - until the
  * guide's done; after that, nothing. (Max level has its own call to rebirth, up top:
  * RebirthNotice.)
  */
 function useHint() {
   const step = useGame((s) => s.profile.tutorialStep)
   const muscle = useGame((s) => Math.floor(s.profile.muscle))
-  const atBoulder = useGame((s) => s.zone.pushZone)
+  const atVehicle = useGame((s) => s.zone.pushZone)
   const current = TUTORIAL[step]
   if (!current) return null
-  if (atBoulder) return { key: 'grab', text: touch ? 'Hold PUSH to push the boulder!' : 'Hold E to push the boulder!' }
+  if (atVehicle) return { key: 'grab', text: touch ? 'Hold PUSH to push the car!' : 'Hold E to push the car!' }
   if (current.muscle && muscle < current.muscle) return { key: current.text, text: `${current.text} ${formatNumber(muscle)}/${current.muscle}` }
   return { key: current.text, text: current.text }
 }

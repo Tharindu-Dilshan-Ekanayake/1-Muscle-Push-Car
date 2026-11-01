@@ -17,7 +17,7 @@ import RemoteAvatars from './remote/RemoteAvatars'
 import RemotePlayers from './remote/RemotePlayers'
 import Particles from './fx/Particles'
 import LiftInput from './LiftInput'
-import Boulders from './push/Boulders'
+import Vehicles from './push/Vehicles'
 import ChatBubbles from './ChatBubbles'
 import DumbbellShop from './world/DumbbellShop'
 import EggDisplays from './world/EggDisplays'
@@ -247,7 +247,7 @@ export function GameScene({ onReady }) {
         <Player onAvatarReady={handleAvatarReady} />
         <ChatBubbles />
         <PauseForAds />
-        <Boulders />
+        <Vehicles />
         <Auras />
         <BlobShadows />
         <GainFX />

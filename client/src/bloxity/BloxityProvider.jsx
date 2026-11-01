@@ -43,7 +43,7 @@ function isResetSentinel(equipped) {
  * portal locally) and sign-in could never return, so in development, and only when told
  * nothing, it's handed production's addresses from the one environment helper.
  */
-/** This game on Boxity: +1 Muscle to Push Boulder. */
+/** This game on Boxity (its slug is from when it pushed a boulder, and stays: it's the game's id). */
 const GAME_SLUG = '1-muscle-to-push-boulder'
 
 function initOptions(gameSlug) {

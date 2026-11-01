@@ -182,9 +182,9 @@ function airborne(vy) {
 }
 
 /**
- * Pushing a boulder: both arms up and forward with the palms on the rock, leaning into
+ * Pushing a vehicle: both arms up and forward with the palms on the rock, leaning into
  * it, legs driving (striding with the speed). `effort` (0-1) is how hard you're
- * pushing; `strain` (0-1) is how close a boulder that's too heavy is to crushing you -
+ * pushing; `strain` (0-1) is how close a vehicle that's too heavy is to crushing you -
  * the stance digs in and the whole body trembles.
  */
 function pushing(time, phase, speed, maxSpeed, effort, strain) {
@@ -244,7 +244,7 @@ function seated(time) {
   pose.lift -= SIT_DROP
 }
 
-/** Flattened by a boulder: arms and legs splayed out like a starfish. */
+/** Flattened by a vehicle: arms and legs splayed out like a starfish. */
 function splat(w) {
   add('ArmL1', -0.2, 1.3 * OUT_L, 0, w)
   add('ArmR1', -0.2, 1.3 * OUT_R, 0, w)
@@ -294,7 +294,7 @@ const TRAIN_PERIOD = 0.8
  *   vy?: number, stride?: number, pushing?: boolean, effort?: number, strain?: number,
  *   crushed?: number, cheer?: number, curl?: number, training?: boolean,
  *   sitting?: boolean, dance?: number }} motion
- *   `pushing` puts the hands on a boulder; `speed` is then the push's speed, `effort`
+ *   `pushing` puts the hands on a vehicle; `speed` is then the push's speed, `effort`
  *   (0-1) how hard, `strain` (0-1) how close to being crushed, `crushed` (0-1) how
  *   flattened, and `cheer` (0-1) the celebration at the top. Otherwise `curl` (0-1) is a
  *   lift in progress (0 = none), `sitting` sits you on a bench and `training` curls on a
@@ -308,7 +308,7 @@ export function computePose(motion) {
     grounded = true,
     vy = 0,
     stride: phase = time * 5,
-    pushing: onBoulder = false,
+    pushing: onVehicle = false,
     effort = 0,
     strain = 0,
     crushed = 0,
@@ -326,7 +326,7 @@ export function computePose(motion) {
   }
   pose.lift = 0
 
-  if (onBoulder) {
+  if (onVehicle) {
     if (crushed > 0) splat(crushed)
     else if (cheer > 0) {
       stance(1 - cheer, time)

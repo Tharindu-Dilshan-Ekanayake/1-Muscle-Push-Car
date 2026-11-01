@@ -41,8 +41,8 @@ const _p = new Vector3()
 const _s = new Vector3()
 
 /**
- * Soft round contact shadows under characters and pets, for presets without realtime
- * shadows. Procedural (no texture) and instanced: one draw call for all of them.
+ * Soft round contact shadows under characters, pets and vehicles (stretched along the
+ * track by `aspect`, for the long ones), for presets without realtime shadows. Procedural (no texture) and instanced: one draw call for all of them.
  */
 export function BlobShadows() {
   const enabled = useQuality((s) => s.settings.shadows !== 'realtime')
@@ -98,7 +98,7 @@ export function BlobShadows() {
       const lift = Math.max(0, p.y - floor)
       const size = caster.size * Math.max(0.35, 1 - lift * 0.12)
       _p.set(p.x, floor + 0.04, p.z)
-      _s.set(size, size, 1)
+      _s.set(size, size * (caster.aspect ?? 1), 1)
       _q.setFromAxisAngle(_xAxis, -Math.PI / 2 + (onTrack ? tiltAt(meter) : 0))
       mesh.setMatrixAt(i, _m.compose(_p, _q, _s))
       i += 1

@@ -47,8 +47,8 @@ export const useGame = create((set) => ({
     sphinx: false,
     auras: false,
     potions: false,
-    /** Up the mountain, in a SAFEZONE by the next boulder: that stage's index, else -1. */
-    climbBoulder: -1,
+    /** Up the mountain, in a SAFEZONE by the next vehicle: that stage's index, else -1. */
+    climbVehicle: -1,
   },
 
   /** Which modal panel is open: 'rebirth' | 'daily' | 'pets' | 'items' | 'store' | ... */
@@ -65,7 +65,7 @@ export const useGame = create((set) => ({
    * `{ stage, need, seconds }`, seconds being Boxity's countdown (0: Respawn may be pressed).
    */
   death: null,
-  /** Up the mountain: 'push' (pushing a boulder) or 'free' (walking a SAFEZONE); null in the plaza. */
+  /** Up the mountain: 'push' (pushing a vehicle) or 'free' (walking a SAFEZONE); null in the plaza. */
   climb: null,
   /** The big message of the moment up the track: { kind: 'clear' | 'crushed' | 'top', ..., id }. */
   pushBanner: null,

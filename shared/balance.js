@@ -72,10 +72,10 @@ export const TRAIN_ZONES = [
  * What you lift with. `power` is the Muscle each lift gives before multipliers; `cost`
  * is in Wins. Bought in order from the dumbbell shop.
  *
- * Prices go with the stages (World 1's thirteen, then Future World's seven): from the
+ * Prices go with the stages (World 1's thirteen, then Mega City's seven): from the
  * Emerald on, each dumbbell costs two or three climbs to the stage it goes with, paid in
  * the Wins that stage's pad gives with the boosts a player has by then - so every new
- * stage pays for about one new dumbbell. Future World's cost more again, since its Wins
+ * stage pays for about one new dumbbell. Mega City's cost more again, since its Wins
  * stack up so fast.
  */
 export const DUMBBELLS = [
@@ -102,23 +102,56 @@ export const DUMBBELLS = [
   { id: 'hell', name: 'HELL DUMBBELL', power: 3500, cost: 15000000000000, tag: 'OP' },
 ]
 
-// --- The boulder track ------------------------------------------------------------
+// --- The road up the mountain -----------------------------------------------------
 
 /**
- * The worlds, each with its own track up the mountain: World 1, and Future World
- * through the portal (WORLD_PORTALS), which takes `wins` Wins to step into the first
- * time.
+ * Everything you push, one per stage: its name, and its footprint in metres - `length`
+ * along the road, `width` across it and `height` - which the road, the Wins orbs, the
+ * camera and the plaza's collider all go by. They grow stage by stage, from a rusty
+ * hatchback in the junkyard to a giant mining truck at the very top. How each one looks
+ * is the client's (client/src/game/push/vehicleModels.js).
+ */
+export const VEHICLES = {
+  rustyHatch: { name: 'Rusty Hatchback', length: 4.0, width: 2.0, height: 1.9 },
+  oldPickup: { name: 'Old Farm Pickup', length: 5.0, width: 2.2, height: 2.1 },
+  threeWheeler: { name: 'Three-Wheeler', length: 3.3, width: 1.7, height: 2.2 },
+  brokenVan: { name: 'Broken Minivan', length: 4.8, width: 2.2, height: 2.5 },
+  sedan: { name: 'Family Sedan', length: 4.8, width: 2.1, height: 1.75 },
+  jeep: { name: 'Desert Jeep', length: 4.4, width: 2.2, height: 2.3 },
+  taxi: { name: 'City Taxi', length: 4.8, width: 2.1, height: 2.0 },
+  deliveryVan: { name: 'Delivery Van', length: 5.6, width: 2.3, height: 2.9 },
+  snowplow: { name: 'Snowplow Truck', length: 6.4, width: 2.6, height: 3.1 },
+  schoolBus: { name: 'Old School Bus', length: 8.0, width: 2.5, height: 3.1 },
+  boxTruck: { name: 'Box Truck', length: 7.0, width: 2.5, height: 3.4 },
+  containerTruck: { name: 'Container Truck', length: 9.0, width: 2.6, height: 3.6 },
+  dumpTruck: { name: 'Dump Truck', length: 7.6, width: 2.7, height: 3.6 },
+  sportsCar: { name: 'Neon Sports Car', length: 4.6, width: 2.2, height: 1.45 },
+  fireTruck: { name: 'Fire Truck', length: 8.4, width: 2.6, height: 3.5 },
+  wreckedTanker: { name: 'Wrecked Tanker', length: 9.0, width: 2.7, height: 3.5 },
+  cementMixer: { name: 'Cement Mixer', length: 8.0, width: 2.6, height: 3.8 },
+  monsterTruck: { name: 'Monster Truck', length: 6.0, width: 3.0, height: 4.2 },
+  goldLimo: { name: 'Golden Limo', length: 9.0, width: 2.4, height: 1.9 },
+  haulTruck: { name: 'Giant Mining Truck', length: 11.0, width: 3.3, height: 5.2 },
+}
+
+/** The vehicle pushed up stage `stage` (a WORLDS stage): its VEHICLES entry. */
+export const vehicleOf = (stage) => VEHICLES[stage.vehicle]
+
+/**
+ * The worlds, each with its own road up the mountain: World 1, and Mega City through
+ * the portal (WORLD_PORTALS), which takes `wins` Wins to step into the first time.
  *
  * A world's stages run bottom to top: each a slope `length` metres long with its own
- * boulder, and between one stage and the next a flat SAFEZONE SAFE_LENGTH metres long,
- * where you walk about freely without a boulder.
+ * vehicle (`vehicle`, a VEHICLES id), and between one stage and the next a flat
+ * SAFEZONE SAFE_LENGTH metres long, where you walk about freely without one. The roads
+ * go from a muddy junkyard and cracked old streets to smooth highways and beyond.
  *
- * Each stage is its own push: at the foot of its slope you take its boulder (E) with
+ * Each stage is its own push: at the foot of its slope you take its vehicle (E) with
  * all your Muscle as power, and pushing it up drains the power - one for every metre
  * on World 1's first three stages, so `need` (the "Recommended") is exactly what gets you
  * to the top: 20 for the first, 200 for the second, 500 for the third. Past those the
- * boulders get heavier: 300 m each, but more power to the metre. When the power runs
- * out the boulder rolls back down and crushes you; reach the SAFEZONE above and your
+ * vehicles get heavier: 300 m each, but more power to the metre. When the power runs
+ * out the vehicle rolls back down and runs you over; reach the SAFEZONE above and your
  * power is back to full for the next one.
  *
  * Wins come only from the WINS pad in the SAFEZONE at the top of each stage, off to the
@@ -132,33 +165,33 @@ export const WORLDS = [
     id: 'earth',
     name: 'World 1',
     stages: [
-      { id: 'grass', name: 'Grassy Hill', boulder: 'Stone Boulder', need: 20, length: 20, wins: 10 },
-      { id: 'sand', name: 'Sandy Path', boulder: 'Sand Boulder', need: 200, length: 200, wins: 100 },
-      { id: 'ice', name: 'Frozen Peak', boulder: 'Iced Boulder', need: 500, length: 500, wins: 250 },
-      { id: 'jungle', name: 'Jungle Ruins', boulder: 'Mossy Boulder', need: 1000, length: 300, wins: 500 },
-      { id: 'volcano', name: 'Lava Volcano', boulder: 'Magma Boulder', need: 2000, length: 300, wins: 1000 },
-      { id: 'beach', name: 'Sunny Beach', boulder: 'Coral Boulder', need: 5000, length: 300, wins: 2500 },
-      { id: 'mushroom', name: 'Mushroom Forest', boulder: 'Mushroom Boulder', need: 10000, length: 300, wins: 5000 },
-      { id: 'candy', name: 'Candy Land', boulder: 'Candy Boulder', need: 20000, length: 300, wins: 10000 },
-      { id: 'spooky', name: 'Spooky Hollow', boulder: 'Pumpkin Boulder', need: 50000, length: 300, wins: 25000 },
-      { id: 'swamp', name: 'Toxic Swamp', boulder: 'Slime Boulder', need: 100000, length: 300, wins: 50000 },
-      { id: 'crystal', name: 'Crystal Caves', boulder: 'Crystal Boulder', need: 200000, length: 300, wins: 100000 },
-      { id: 'cloud', name: 'Cloud Kingdom', boulder: 'Golden Boulder', need: 500000, length: 300, wins: 250000 },
-      { id: 'moon', name: 'Moon Peak', boulder: 'Moon Boulder', need: 2000000, length: 300, wins: 1000000 },
+      { id: 'junkyard', name: 'Junkyard Lane', vehicle: 'rustyHatch', need: 20, length: 20, wins: 10 },
+      { id: 'dirt', name: 'Dusty Farm Road', vehicle: 'oldPickup', need: 200, length: 200, wins: 100 },
+      { id: 'village', name: 'Village Road', vehicle: 'threeWheeler', need: 500, length: 500, wins: 250 },
+      { id: 'cracked', name: 'Broken Old Street', vehicle: 'brokenVan', need: 1000, length: 300, wins: 500 },
+      { id: 'country', name: 'Country Road', vehicle: 'sedan', need: 2000, length: 300, wins: 1000 },
+      { id: 'desert', name: 'Desert Highway', vehicle: 'jeep', need: 5000, length: 300, wins: 2500 },
+      { id: 'city', name: 'Downtown Street', vehicle: 'taxi', need: 10000, length: 300, wins: 5000 },
+      { id: 'suburb', name: 'Suburb Avenue', vehicle: 'deliveryVan', need: 20000, length: 300, wins: 10000 },
+      { id: 'snow', name: 'Snowy Pass', vehicle: 'snowplow', need: 50000, length: 300, wins: 25000 },
+      { id: 'mountain', name: 'Mountain Road', vehicle: 'schoolBus', need: 100000, length: 300, wins: 50000 },
+      { id: 'highway', name: 'Super Highway', vehicle: 'boxTruck', need: 200000, length: 300, wins: 100000 },
+      { id: 'harbor', name: 'Harbour Docks', vehicle: 'containerTruck', need: 500000, length: 300, wins: 250000 },
+      { id: 'quarry', name: 'Rock Quarry', vehicle: 'dumpTruck', need: 2000000, length: 300, wins: 1000000 },
     ],
   },
   {
     id: 'future',
-    name: 'Future World',
+    name: 'Mega City',
     wins: 1400000,
     stages: [
-      { id: 'neon', name: 'Neon City', boulder: 'Neon Boulder', need: 5000000, length: 300, wins: 2500000 },
-      { id: 'cyber', name: 'Cyber Highway', boulder: 'Cyber Boulder', need: 50000000, length: 300, wins: 25000000 },
-      { id: 'factory', name: 'Robot Factory', boulder: 'Robot Boulder', need: 500000000, length: 300, wins: 250000000 },
-      { id: 'station', name: 'Space Station', boulder: 'Satellite Boulder', need: 5000000000, length: 300, wins: 2500000000 },
-      { id: 'mars', name: 'Mars Canyon', boulder: 'Mars Boulder', need: 50000000000, length: 300, wins: 25000000000 },
-      { id: 'asteroid', name: 'Asteroid Belt', boulder: 'Asteroid Boulder', need: 500000000000, length: 300, wins: 250000000000 },
-      { id: 'galaxy', name: 'Galaxy Core', boulder: 'Galaxy Boulder', need: 5000000000000, length: 300, wins: 2500000000000 },
+      { id: 'neon', name: 'Neon Boulevard', vehicle: 'sportsCar', need: 5000000, length: 300, wins: 2500000 },
+      { id: 'tunnel', name: 'Highway Tunnel', vehicle: 'fireTruck', need: 50000000, length: 300, wins: 25000000 },
+      { id: 'wasteland', name: 'Wasteland Road', vehicle: 'wreckedTanker', need: 500000000, length: 300, wins: 250000000 },
+      { id: 'construction', name: 'Construction Zone', vehicle: 'cementMixer', need: 5000000000, length: 300, wins: 2500000000 },
+      { id: 'arena', name: 'Monster Arena', vehicle: 'monsterTruck', need: 50000000000, length: 300, wins: 25000000000 },
+      { id: 'skyway', name: 'Golden Skyway', vehicle: 'goldLimo', need: 500000000000, length: 300, wins: 250000000000 },
+      { id: 'mega', name: 'Mega Highway', vehicle: 'haulTruck', need: 5000000000000, length: 300, wins: 2500000000000 },
     ],
   },
 ]
@@ -167,7 +200,7 @@ export const SAFE_LENGTH = 16
  * Wins orbs up every slope: from `from` metres up it to `from` short of its top, a group
  * of `group` orbs `spacing` metres apart every `every` metres, each group on the other
  * side of the track from the last. All of a stage's together are worth `share` of its
- * Wins. Push the boulder into one and it pays at once - once a climb.
+ * Wins. Push your vehicle into one and it pays at once - once a climb.
  */
 export const ORBS = { from: 6, every: 25, group: 3, spacing: 3, share: 0.2 }
 
@@ -178,7 +211,7 @@ export const ORBS = { from: 6, every: 25, group: 3, spacing: 3, share: 0.2 }
  * at the same moment).
  */
 export const WIN_PAD = { from: 5, to: 10, minX: 1, maxX: 3.2, slack: 0.8 }
-/** In a SAFEZONE, how close to the next boulder you must be to take it. */
+/** In a SAFEZONE, how close to the next vehicle you must be to take it. */
 export const GRAB_REACH = 3
 
 /** Where you stand when a push starts: this far before the foot of its stage's slope. */
@@ -187,7 +220,7 @@ export const PUSH_START = -2.5
 export const PUSH_SPEED = 6.5
 /** The server's allowance for push speed, a little over PUSH_SPEED for lag. */
 export const PUSH_SPEED_MAX = 9
-/** Let go on a slope and the boulder rolls back down (m/s), as far as the SAFEZONE below. */
+/** Let go on a slope and the vehicle rolls back down (m/s), as far as the SAFEZONE below. */
 export const ROLLBACK_SPEED = 3.2
 /** A push with no progress report for this long is ended by the server. */
 export const PUSH_TIMEOUT_MS = 30000
@@ -359,14 +392,14 @@ export const MUSCLE_PACKS = [
 
 /**
  * The guide for brand-new players - all of it: train on a bench in the FREE Train Zone
- * until strong enough for the first boulder, push it up the first stage and take its
+ * until strong enough for the first car, push it up the first stage and take its
  * Wins on the WINS pad (which brings you back to the lobby), and spend them on a
  * dumbbell. After that, no more guides. Each step completes when its event fires (with
  * at least `muscle` Muscle, where given: what the first stage needs).
  */
 export const TUTORIAL = [
   { text: 'Sit on a bench in the FREE Train Zone to train!', event: 'train', target: 'zone0', muscle: 20 },
-  { text: 'Push the boulder up the first stage!', event: 'cashIn', target: 'push' },
+  { text: 'Push the car up the first road!', event: 'cashIn', target: 'push' },
   { text: 'Buy the Iron Dumbbell with your Wins!', event: 'buyDumbbell', target: 'dumbbells' },
 ]
 

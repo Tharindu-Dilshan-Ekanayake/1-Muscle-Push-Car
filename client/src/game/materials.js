@@ -44,6 +44,22 @@ export const STYLE = {
   BLOCK_GRASS: 14,
   /** Big floor tiles with thin seams and a faint checker: the track's floor. */
   TILES: 15,
+  /** Old asphalt: cracked all over, potholed, patched. */
+  CRACKED: 16,
+  /** Packed dirt: blotchy, pebbly, worn into two tyre ruts down the road. */
+  DIRT: 17,
+  /** Corrugated sheet metal: ribs up the sides (fences, sheds, containers). */
+  CORRUGATED: 18,
+  /** Rusted metal: the colour, eaten through with orange-brown rust. */
+  RUST: 19,
+  /** Old town: rounded cobblestones in staggered rows (the square, the streets). */
+  COBBLE: 20,
+  /** Old town: bricks in running bond, in pale mortar. */
+  BRICK: 21,
+  /** Old town: a plastered house front, rows of shuttered windows up every storey. */
+  TOWNHOUSE: 22,
+  /** Old town: rows of clay roof tiles. */
+  ROOF: 23,
 }
 
 /** Shared clock for animated styles; WorldClock advances it once per frame. */
@@ -152,6 +168,31 @@ const fragmentHead = /* glsl */ `
     return mix(1.0 + check - seam * 0.2, 0.99, smoothstep(0.25, 0.6, aa));
   }
 
+  // Cobbles: staggered rows of rounded stones, each a shade of its own, in dark joints.
+  float toyCobble(vec2 suv) {
+    vec2 p = suv * vec2(1.25, 1.6);
+    float row = floor(p.y);
+    p.x += mod(row, 2.0) * 0.5;
+    vec2 cell = floor(p);
+    vec2 f = fract(p) - 0.5;
+    vec2 w = fwidth(p);
+    float aa = max(max(w.x, w.y), 1e-4);
+    vec2 q = abs(f) - vec2(0.33, 0.3);
+    float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - 0.12;
+    float stone = 1.0 - smoothstep(-aa, aa, d);
+    float tint = 0.88 + 0.2 * toyHash(cell);
+    float lit = clamp(-d * 6.0, 0.0, 1.0) * (f.y - f.x) * 0.12;
+    return mix(mix(0.62, tint + lit, stone), 0.9, smoothstep(0.25, 0.6, aa));
+  }
+
+  // Smooth 2D value noise in [0, 1).
+  float toyNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    return mix(mix(toyHash(i), toyHash(i + vec2(1.0, 0.0)), f.x), mix(toyHash(i + vec2(0.0, 1.0)), toyHash(i + vec2(1.0, 1.0)), f.x), f.y);
+  }
+
   vec3 toyHue(float h) {
     return clamp(abs(mod(h * 6.0 + vec3(0.0, 4.0, 2.0), 6.0) - 3.0) - 1.0, 0.0, 1.0);
   }
@@ -168,6 +209,9 @@ const fragmentBody = /* glsl */ `
     vec3 col = diffuseColor.rgb;
     float style = vToyStyle + 0.5;
 
+  #ifdef TOY_GROUND
+    col *= toyCobble(suv);
+  #else
     if (style < 1.0) {
       col *= toyTile(sp);
     } else if (style < 2.0) {
@@ -240,21 +284,116 @@ const fragmentBody = /* glsl */ `
     } else if (style < 15.0) {
       if (isTop || vToyDepth < 0.55) col = uGrass * (isTop ? 1.0 : 0.86);
       col *= toyBlock(suv * 0.62);
-    } else {
+    } else if (style < 16.0) {
       col *= toyFloor(suv / 2.25);
     }
+  #ifdef TOY_ROAD
+    else if (style < 17.0) {
+      // Cracked asphalt: grain, a web of dark cracks, the odd pothole and patched square.
+      vec2 w = fwidth(suv);
+      float far = smoothstep(0.08, 0.3, max(w.x, w.y));
+      col *= 0.93 + 0.07 * toyHash(floor(suv * 3.0));
+      col *= 1.0 + 0.1 * step(0.82, toyHash(floor(suv * 0.22) + 11.0));
+      float web = abs(toyNoise(suv * 0.9) + toyNoise(suv * 2.1 + 4.0) * 0.5 - 0.75);
+      col *= 1.0 - (1.0 - smoothstep(0.004, 0.014, web)) * 0.45 * (1.0 - far);
+      vec2 pc = floor(suv * 0.14);
+      vec2 jitter = vec2(toyHash(pc + 3.0), toyHash(pc + 5.0)) - 0.5;
+      float hole = step(0.7, toyHash(pc)) * (1.0 - smoothstep(0.14, 0.19, length(fract(suv * 0.14) - 0.5 + jitter * 0.4)));
+      col *= 1.0 - hole * 0.5;
+    }
+  #endif
+  #if defined(TOY_ROAD) || defined(TOY_TOWN)
+    else if (style < 18.0) {
+      // Dirt: blotches and pebbles; on a road's floor, two darker tyre ruts.
+      col *= 0.85 + 0.25 * toyNoise(suv * 0.8);
+      col = mix(col, col * 1.3 + 0.05, step(0.93, toyHash(floor(suv * 5.0))) * 0.7);
+      if (isTop) col *= 1.0 - 0.18 * (1.0 - smoothstep(0.2, 0.75, abs(abs(vToyPos.x) - 1.65)));
+    }
+  #endif
+  #ifdef TOY_ROAD
+    else if (style < 19.0) {
+      // Corrugated metal: ribs up every side, a little rust streaking down.
+      if (!isTop) {
+        float along = an.x > 0.5 ? vToyPos.z : vToyPos.x;
+        col *= 0.76 + 0.24 * smoothstep(0.1, 0.7, abs(fract(along * 1.6) - 0.5) * 2.0);
+        col = mix(col, vec3(0.45, 0.24, 0.12), smoothstep(0.62, 0.9, toyNoise(vec2(along * 3.0, vToyPos.y * 0.4))) * 0.45);
+      }
+    } else if (style < 20.0) {
+      // Rust: the colour eaten through in orange-brown blotches, flecked darker.
+      float n = toyNoise(suv * 1.7) * 0.7 + toyNoise(suv * 5.0) * 0.3;
+      vec3 rust = mix(vec3(0.62, 0.3, 0.12), vec3(0.36, 0.17, 0.08), toyHash(floor(suv * 9.0)));
+      col = mix(col, rust, smoothstep(0.42, 0.6, n));
+    }
+  #endif
+  #ifdef TOY_TOWN
+    else if (style < 21.0) {
+      col *= toyCobble(suv);
+    } else if (style < 22.0) {
+      // Bricks: running bond in pale mortar, each brick its own shade.
+      vec2 p = vec2(suv.x * 2.2, (an.y > 0.5 ? suv.y : vToyPos.y) * 4.4);
+      float row = floor(p.y);
+      p.x += mod(row, 2.0) * 0.5;
+      vec2 f = fract(p);
+      vec2 w = fwidth(p);
+      float aa = max(max(w.x, w.y), 1e-4);
+      float mortar = max(1.0 - smoothstep(0.06 - aa, 0.06 + aa, f.x), 1.0 - smoothstep(0.1 - aa, 0.1 + aa, f.y));
+      float tint = 0.86 + 0.24 * toyHash(floor(p));
+      col = mix(col * tint, vec3(0.86, 0.82, 0.76), mortar * (1.0 - smoothstep(0.2, 0.5, aa)));
+    } else if (style < 23.0) {
+      // A plastered house front: per storey, windows in white frames with shutters
+      // either side; on the ground floor, wider shop windows. Bare on top.
+      if (!isTop) {
+        float storey = 3.2;
+        float level = floor(vToyPos.y / storey);
+        vec2 cell = vec2(suv.x / (level < 1.0 ? 3.6 : 2.8), fract(vToyPos.y / storey));
+        vec2 f = vec2(fract(cell.x), cell.y);
+        float halfW = level < 1.0 ? 0.3 : 0.18;
+        float x = abs(f.x - 0.5);
+        float frame = step(x, halfW + 0.04) * step(0.2, f.y) * step(f.y, 0.86);
+        float glass = step(x, halfW) * step(0.24, f.y) * step(f.y, 0.82);
+        float shutter = step(halfW + 0.05, x) * step(x, halfW + 0.15) * step(0.24, f.y) * step(f.y, 0.82) * step(1.0, level);
+        float sill = step(x, halfW + 0.07) * step(0.17, f.y) * step(f.y, 0.21);
+        col *= 0.95 + 0.08 * toyNoise(suv * 1.5);
+        col = mix(col, col * 0.5 + vec3(0.06, 0.12, 0.08), shutter);
+        col = mix(col, vec3(0.95, 0.93, 0.88), max(frame, sill));
+        vec3 pane = mix(vec3(0.16, 0.24, 0.34), vec3(0.5, 0.66, 0.8), smoothstep(0.3, 0.8, f.y));
+        float bars = step(abs(f.x - 0.5), 0.012) + step(abs(f.y - 0.53), 0.01);
+        col = mix(col, pane, glass * (1.0 - min(bars, 1.0) * 0.8));
+      }
+    } else if (style < 24.0) {
+      // Clay roof tiles: rows down the slope, each tile's end showing.
+      float rows = fract(vToyPos.y * 2.6);
+      float seam = fract((vToyPos.x + vToyPos.z) * 1.4 + floor(vToyPos.y * 2.6) * 0.5);
+      col *= (0.8 + 0.25 * smoothstep(0.0, 0.85, rows)) * (0.9 + 0.1 * smoothstep(0.0, 0.12, seam));
+      col *= 0.94 + 0.12 * toyHash(floor(vec2(vToyPos.x + vToyPos.z, vToyPos.y) * vec2(1.4, 2.6)));
+    }
+  #endif
+  #endif
 
     diffuseColor.rgb = col;
   }
 `
 
 /**
- * One material per variant (instanced or vertex-coloured), shared by every mesh of that
- * kind. Program code is identical across all toy materials, so three compiles it once
- * per variant no matter how many there are.
+ * Which styles each kind of toy material draws: only those its meshes use, so its shader
+ * is no bigger than it needs to be - shaders compile while the game loads, and every
+ * style is more to compile. The lobby's has the town's (BRICK, TOWNHOUSE, ROOF, COBBLE,
+ * DIRT); the road's has the road's (CRACKED, DIRT, CORRUGATED, RUST), compiled in the
+ * background once the lobby's up; the ground's is just its cobbles. All have the rest.
+ */
+const STYLE_SETS = {
+  lobby: { TOY_TOWN: '' },
+  road: { TOY_ROAD: '' },
+  ground: { TOY_GROUND: '' },
+}
+
+/**
+ * One material per variant (instanced or vertex-coloured, and its `styles`: see
+ * STYLE_SETS), shared by every mesh of that kind. Program code is identical across toy
+ * materials of a variant, so three compiles it once per variant however many there are.
  *
  * @param {{ instanced?: boolean, vertexColors?: boolean, map?: import('three').Texture,
- *           studScale?: number }} [options]
+ *           studScale?: number, styles?: 'lobby' | 'road' | 'ground' }} [options]
  *   `studScale` is studs per world unit. Non-instanced meshes default to vertex colours.
  */
 export function createToyMaterial({
@@ -262,8 +401,10 @@ export function createToyMaterial({
   vertexColors = !instanced,
   map = null,
   studScale = 2,
+  styles = 'lobby',
 } = {}) {
   const material = new MeshLambertMaterial({ color: 0xffffff, vertexColors, map })
+  material.defines = { ...STYLE_SETS[styles] }
 
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uStudScale = { value: studScale }
@@ -279,25 +420,26 @@ export function createToyMaterial({
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fragmentBody}`)
   }
   // The stud scale is a uniform, so materials differing only in it share a program.
-  material.customProgramCacheKey = () => 'toy-v3'
+  material.customProgramCacheKey = () => `toy-v6-${styles}`
   return material
 }
 
 /**
- * The one shared toy material: instanced, with vertex colours and instance colours.
- * Everything toy-styled - blocks, props, pets, arrows, trophies, other players,
- * confetti - is drawn as instances through it, so it compiles to a single shader
- * program however many systems use it. (Only the ground, which needs a texture map,
- * has its own variant.)
+ * The shared toy materials: instanced, with vertex colours and instance colours.
+ * Everything toy-styled in the lobby - blocks, props, pets, arrows, trophies, other
+ * players, confetti - is drawn as instances through `toy`, so it compiles to a single
+ * shader program however many systems use it; the road up the mountain through `roads`,
+ * its own program with the road's styles, compiled when the road first loads. (The
+ * ground, which needs a texture map, has its own variant too.)
  *
- * Created lazily; `blocks` and `props` are the same material under the names the
- * systems know it by.
+ * Created lazily; `blocks` and `props` are `toy` under the names the systems know it by.
  */
 let shared = null
 export function sharedMaterials() {
   if (!shared) {
     const toy = createToyMaterial({ instanced: true, vertexColors: true, studScale: 2 })
-    shared = { toy, blocks: toy, props: toy }
+    const roads = createToyMaterial({ instanced: true, vertexColors: true, studScale: 2, styles: 'road' })
+    shared = { toy, blocks: toy, props: toy, roads }
   }
   return shared
 }

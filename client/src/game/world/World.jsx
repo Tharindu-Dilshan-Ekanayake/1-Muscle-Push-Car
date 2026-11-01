@@ -11,16 +11,16 @@ import { buildLawnCurbs } from './lawns'
 import { buildPortalFrame } from './portalFrame'
 import { buildPushZone } from './pushZone'
 import { createPaintedSigns } from './signs'
-import { buildShop, buildStands, buildStatue, buildTrainZones } from './structures'
+import { buildShop, buildStands, buildStatue, buildTrainSign, buildTrainZones } from './structures'
 import { buildTerrain } from './terrain'
-import { buildWaterfall } from './waterfall'
+import { buildTown } from './town'
 
 /**
- * The static lobby: ground plane, every box (mountains, trees, Train Zones, stages,
- * stands, the statue) in one InstancedMesh, and every non-box prop (egg stands' wings...)
+ * The static lobby, an old town square: ground plane, every box (the town round it,
+ * the mountains behind, trees, Train Zones, stages, stands, the statue) in one InstancedMesh, and every non-box prop (egg stands' wings...)
  * merged into one mesh. Three draw calls for the whole environment.
  *
- * Built once. Quality only decides tree density at build time and whether the result
+ * Built once. Quality only decides how much small detail the town gets and whether the result
  * casts/receives realtime shadows.
  */
 export function World() {
@@ -61,20 +61,21 @@ export function World() {
     performance.mark('pp:world-start')
     const { decorDensity, maxTexture } = useQuality.getState().settings
     const set = new BlockSet()
-    buildTerrain(set, { treeDensity: decorDensity })
+    buildTerrain(set)
     buildLawnCurbs(set)
     buildTrainZones(set)
     const propBuilder = new PropBuilder()
     buildShop(set, { detail: decorDensity >= 0.75 })
+    buildTrainSign(set, { detail: decorDensity >= 0.75 })
     buildPushZone(set)
     buildStands(set)
     buildStatue(set, propBuilder)
     buildPortalFrame(set)
-    buildWaterfall(set)
+    buildTown(set, { detail: decorDensity >= 0.75 })
     buildEggStands(set, propBuilder)
 
     const map = createGroundMap(maxTexture)
-    const groundMaterial = createToyMaterial({ instanced: false, vertexColors: false, map, studScale: 2 })
+    const groundMaterial = createToyMaterial({ instanced: false, vertexColors: false, map, studScale: 2, styles: 'ground' })
 
     performance.mark('pp:world-end')
     return {

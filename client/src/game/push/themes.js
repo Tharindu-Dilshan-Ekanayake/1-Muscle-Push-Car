@@ -1,136 +1,189 @@
 import { STYLE } from '../materials'
 
 /**
- * Per-stage look, as in the reference: a tiled floor (`floor`, or `floorStyle`) between
- * stepped cliffs of big square studs (`wall`, or `wallStyle`; BLOCK_GRASS gives them
- * grass caps of their own, otherwise they get a cap slab in `cap`), the line where the
- * stage's slope starts (`gate`), the sky up there (`stars` out in space) and the HUD's
- * stage-name colours. World 1's stages first, then Future World's.
+ * Per-stage look: the road's surface (`floor`, `floorStyle`) between stepped cliffs of
+ * big square studs (`wall`, or `wallStyle`; BLOCK_GRASS gives them grass caps of their
+ * own, otherwise they get a cap slab in `cap`), the line where the stage's slope starts
+ * (`gate`), the sky up there (`stars` out in space) and the HUD's stage-name colours.
+ *
+ * `open` roads have low banks either side instead of tall cliffs, so the roadside shows.
+ *
+ * `road` is what's painted on and stands along it:
+ * - `center`: the middle line - 'dash', 'solid', 'double' or none; `edge`: solid lines
+ *   down both sides; `lines` their colour, `glowLines` lit up; `worn` (0-1) how much of
+ *   the dashed paint has worn away.
+ * - `lamp`: the lamps down both sides - 'street', 'highway', 'wood', 'broken' (leaning,
+ *   dark), 'neon', 'gold', 'flood' or 'none'.
+ * - `rail`: guardrails down both sides; `gantry`: big green signs over the road now
+ *   and then; `tunnel`: lit ribs over it all the way; `crossing`: zebra crossings;
+ *   `snow`: snow banked along the edges; `cones`: a line of cones down one side.
+ *
+ * Bottom to top they go from a muddy junkyard and broken streets to smooth highways
+ * (World 1), then Mega City's neon boulevards, tunnels and a highway through space.
  */
 export const STAGE_THEMES = {
-  // Bright green tiles between salmon cliffs with grass along every step.
-  grass: {
-    floor: '#5fe03c',
+  // Rusty corrugated fences round a muddy yard of wrecks.
+  junkyard: {
+    floor: '#86765f',
+    floorStyle: STYLE.DIRT,
+    wall: '#9a6a46',
+    wallStyle: STYLE.CORRUGATED,
+    cap: '#6a4a32',
+    capStyle: STYLE.RUST,
+    gate: '#ff8a1e',
+    sky: ['#4f8fd0', '#ead6ae'],
+    name: ['#fff0d6', '#ffb35a', '#c8641e'],
+    road: { lamp: 'wood' },
+  },
+  // A dusty farm track between grassy banks.
+  dirt: {
+    open: true,
+    floor: '#c09060',
+    floorStyle: STYLE.DIRT,
+    wall: '#a8744a',
+    wallStyle: STYLE.BLOCK_GRASS,
+    gate: '#ffd21f',
+    sky: ['#3f9af2', '#c4e6ff'],
+    name: ['#fffbe0', '#ffe066', '#d8a21a'],
+    road: { lamp: 'wood' },
+  },
+  // A patched village road under palms, its paint half gone.
+  village: {
+    open: true,
+    floor: '#7a7c80',
+    floorStyle: STYLE.CRACKED,
+    wall: '#c08454',
+    wallStyle: STYLE.BLOCK_GRASS,
+    gate: '#ff5a3c',
+    sky: ['#2fa0f0', '#c8f0ff'],
+    name: ['#fff0e6', '#ff9a7a', '#e2401c'],
+    road: { center: 'dash', lines: '#f2f0e4', worn: 0.5, lamp: 'wood' },
+  },
+  // A broken old street: cracks, potholes, leaning lamps that don't light.
+  cracked: {
+    floor: '#6a6c70',
+    floorStyle: STYLE.CRACKED,
+    wall: '#8c8a86',
+    cap: '#6a6866',
+    gate: '#ff9c3c',
+    sky: ['#6488aa', '#d4d8dc'],
+    name: ['#f4f4f4', '#c8ccd2', '#7a8088'],
+    road: { center: 'dash', edge: true, lines: '#e6e2c8', worn: 0.75, lamp: 'broken', cones: true },
+  },
+  // Fresh tarmac through green fields.
+  country: {
+    open: true,
+    floor: '#4a4d55',
+    floorStyle: STYLE.ROAD,
     wall: '#c98a6e',
     wallStyle: STYLE.BLOCK_GRASS,
     gate: '#ffd21f',
     sky: ['#2f8ff2', '#a6d6fb'],
     name: ['#e6ffb0', '#8dff4f', '#2fd12f'],
+    road: { center: 'dash', edge: true, lines: '#ffd21f', lamp: 'street' },
   },
-  // A peach floor between tall tan cliffs.
-  sand: {
-    floor: '#f8c999',
-    wall: '#c99a6b',
-    cap: '#e7b886',
+  // A long straight highway through sandstone, double yellow down the middle.
+  desert: {
+    open: true,
+    floor: '#57565b',
+    floorStyle: STYLE.ROAD,
+    wall: '#d29a62',
+    cap: '#ecb87e',
     gate: '#ff9c3c',
-    sky: ['#2f8ff2', '#a6d6fb'],
+    sky: ['#3a9ef0', '#ffe2b0'],
     name: ['#fff3d6', '#ffcf8a', '#e8913a'],
+    road: { center: 'double', edge: true, lines: '#ffcc22', lamp: 'none' },
   },
-  ice: {
-    floor: '#e3f5ff',
-    wall: '#8cc3ec',
+  // Downtown: tower blocks either side, crossings, lamps.
+  city: {
+    floor: '#3d4048',
+    floorStyle: STYLE.ROAD,
+    wall: '#8094ae',
+    wallStyle: STYLE.WINDOWS,
+    cap: '#d4dce8',
+    gate: '#2fc6ff',
+    sky: ['#3a8ae8', '#cfe6ff'],
+    name: ['#e6f6ff', '#7fd4ff', '#1a8ae8'],
+    road: { center: 'double', edge: true, lines: '#ffd21f', lamp: 'street', crossing: true },
+  },
+  // A leafy avenue of houses.
+  suburb: {
+    open: true,
+    floor: '#4a4d55',
+    floorStyle: STYLE.ROAD,
+    wall: '#b98c6a',
+    wallStyle: STYLE.BLOCK_GRASS,
+    gate: '#ff7a1a',
+    sky: ['#3f9af2', '#d6f0ff'],
+    name: ['#fff0e0', '#ffb070', '#ff6a1a'],
+    road: { center: 'dash', lines: '#ffffff', lamp: 'street', crossing: true },
+  },
+  // A ploughed road over a snowy pass, banks of snow along it.
+  snow: {
+    open: true,
+    floor: '#5a5e66',
+    floorStyle: STYLE.ROAD,
+    wall: '#dcecf8',
     cap: '#ffffff',
     gate: '#5cc8ff',
     sky: ['#57aef0', '#e4f4ff'],
     name: ['#ffffff', '#c9f1ff', '#5cc8ff'],
+    road: { center: 'dash', edge: true, lines: '#ffd21f', lamp: 'street', rail: true, snow: true },
   },
-  volcano: {
-    floor: '#4a3f42',
-    wall: '#352e31',
-    cap: '#ff5a1c',
-    capStyle: STYLE.LAVA,
-    gate: '#ff4a1c',
-    sky: ['#5a2a3a', '#d27a52'],
-    name: ['#ffd0b0', '#ff7a3c', '#e2240c'],
+  // A winding mountain road: guardrails, grey rock, snow on the tops.
+  mountain: {
+    open: true,
+    floor: '#4c4f56',
+    floorStyle: STYLE.ROAD,
+    wall: '#8a8a8e',
+    cap: '#f2f6fa',
+    gate: '#ffcc1a',
+    sky: ['#3a8ee8', '#d8ecff'],
+    name: ['#fffbe6', '#ffe066', '#e8a81a'],
+    road: { center: 'double', edge: true, lines: '#ffd21f', lamp: 'none', rail: true },
   },
-  candy: {
-    floor: '#ffc6e4',
-    wall: '#ff9fd2',
-    cap: '#fff2fa',
-    gate: '#ff5fb8',
-    sky: ['#7a8cff', '#ffd6f0'],
-    name: ['#ffe6f6', '#ff9cd6', '#ff3fa8'],
-  },
-  crystal: {
-    floor: '#6a4fc0',
-    wall: '#4a3394',
-    cap: '#a98bff',
-    capStyle: STYLE.GLOW,
-    gate: '#c08bff',
-    sky: ['#2a1e6a', '#8a7ae0'],
-    name: ['#f2e6ff', '#c69bff', '#8a3ee8'],
-  },
-  moon: {
-    floor: '#a3a8b2',
-    wall: '#6c727d',
-    cap: '#cdd1d8',
-    gate: '#8a63ff',
-    sky: ['#05051a', '#241544'],
-    stars: true,
-    name: ['#e6e0ff', '#a98bff', '#6a4cff'],
-  },
-  // Mossy stone ruins under a green canopy.
-  jungle: {
-    floor: '#4caa3c',
-    wall: '#77705a',
+  // Smooth tarmac between grassy verges, big green signs overhead.
+  highway: {
+    open: true,
+    floor: '#3a3d44',
+    floorStyle: STYLE.ROAD,
+    wall: '#b08e6a',
     wallStyle: STYLE.BLOCK_GRASS,
-    gate: '#7dff4f',
-    sky: ['#2d8a5a', '#b8ecc0'],
-    name: ['#e6ffd0', '#7ddc5a', '#2f8a2f'],
+    gate: '#2fe86a',
+    sky: ['#2f8ff2', '#bfe0ff'],
+    name: ['#e6fff0', '#7dffaa', '#1ac85a'],
+    road: { center: 'dash', edge: true, lines: '#ffffff', lamp: 'highway', rail: true, gantry: true },
   },
-  // Golden sand between sandstone cliffs, the sea running over their tops.
-  beach: {
-    floor: '#ffe7b3',
-    wall: '#efbd85',
+  // Concrete quays among stacked containers, the sea over the cliff tops.
+  harbor: {
+    floor: '#8e949c',
+    floorStyle: STYLE.TILES,
+    wall: '#2f6ab0',
+    wallStyle: STYLE.CORRUGATED,
     cap: '#3fd0ff',
     capStyle: STYLE.WATER,
-    gate: '#3fd0ff',
+    gate: '#ffcc1a',
     sky: ['#2fa8ff', '#c4f2ff'],
-    name: ['#fffbe0', '#7fe0ff', '#2fa8ff'],
+    name: ['#e6f8ff', '#7fe0ff', '#2fa8ff'],
+    road: { center: 'solid', edge: true, lines: '#ffcc1a', lamp: 'street' },
   },
-  // Bright moss between purple rock, red toadstool caps along the cliff tops.
-  mushroom: {
-    floor: '#7ed957',
-    wall: '#7a5a9a',
-    cap: '#ff4f5e',
-    capStyle: STYLE.SMOOTH,
-    gate: '#ff4f5e',
-    sky: ['#4a5ad8', '#f6c8ff'],
-    name: ['#fff0f2', '#ff8a96', '#e8243c'],
+  // A dusty haul road down into the quarry.
+  quarry: {
+    open: true,
+    floor: '#a88a68',
+    floorStyle: STYLE.DIRT,
+    wall: '#c49a6a',
+    cap: '#dcb688',
+    gate: '#ffb31a',
+    sky: ['#4a9ae8', '#f0dcc0'],
+    name: ['#fff6d6', '#ffd27a', '#e89a1a'],
+    road: { lamp: 'flood', cones: true },
   },
-  // Murky ground between dark mossy stone, glowing green slime running over the tops.
-  swamp: {
-    floor: '#5a6a34',
-    wall: '#34402a',
-    cap: '#8aff3a',
-    capStyle: STYLE.WATER,
-    gate: '#9dff3a',
-    sky: ['#1f3a24', '#8aa85a'],
-    name: ['#f2ffd8', '#a8ff5a', '#4ac81a'],
-  },
-  // A road of gold tiles above the clouds: white cliffs, gold glowing along every top.
-  cloud: {
-    floor: '#fff1c4',
-    wall: '#eef4ff',
-    cap: '#ffd23f',
-    capStyle: STYLE.GLOW,
-    gate: '#ffd23f',
-    sky: ['#5ab4ff', '#fff4d6'],
-    name: ['#fffbe6', '#ffe066', '#e8a81a'],
-  },
-  // A purple night, pumpkin-orange glowing along the cliff tops.
-  spooky: {
-    floor: '#4a4356',
-    wall: '#2f2a3a',
-    cap: '#ff8a1e',
-    capStyle: STYLE.GLOW,
-    gate: '#ff8a1e',
-    sky: ['#1e1433', '#6a4a8a'],
-    name: ['#ffe0c0', '#ffa040', '#e2600c'],
-  },
-  // Future World: lit-up towers at night, neon along every edge.
+
+  // Mega City: lit-up towers at night, neon along every edge and down the road.
   neon: {
     floor: '#1d1f3a',
+    floorStyle: STYLE.ROAD,
     wall: '#2a2d52',
     wallStyle: STYLE.WINDOWS,
     cap: '#ff3fd0',
@@ -138,67 +191,83 @@ export const STAGE_THEMES = {
     gate: '#ff3fd0',
     sky: ['#120a3a', '#5a2a8a'],
     name: ['#ffe6ff', '#ff7ae8', '#c03fff'],
+    road: { center: 'dash', edge: true, lines: '#2fe8ff', glowLines: true, lamp: 'neon' },
   },
-  cyber: {
-    floor: '#2a3346',
+  // Tiled tunnel walls, a lit rib over the road every few metres.
+  tunnel: {
+    floor: '#3a3d44',
     floorStyle: STYLE.ROAD,
-    wall: '#1c2a3e',
-    cap: '#2fe8ff',
-    capStyle: STYLE.GLOW,
-    gate: '#2fe8ff',
-    sky: ['#0a1a3a', '#2a6a9a'],
-    name: ['#e0fbff', '#5ff0ff', '#1aa8e8'],
-  },
-  // Steel plate and hazard stripes.
-  factory: {
-    floor: '#6a707c',
-    floorStyle: STYLE.PLATE,
-    wall: '#3d434e',
-    cap: '#ffcc1a',
-    capStyle: STYLE.STRIPES,
-    gate: '#ffcc1a',
-    sky: ['#3a3f4a', '#9aa6b8'],
+    wall: '#d8dce2',
+    wallStyle: STYLE.TILES,
+    cap: '#b8bcc4',
+    gate: '#ffd21f',
+    sky: ['#2a2f3a', '#6a7488'],
     name: ['#fff6d0', '#ffd21f', '#e89a1a'],
+    road: { center: 'dash', edge: true, lines: '#ffffff', lamp: 'none', tunnel: true },
   },
-  station: {
-    floor: '#d8dee8',
-    floorStyle: STYLE.PLATE,
-    wall: '#8a94a6',
-    cap: '#4fb4ff',
-    capStyle: STYLE.GLOW,
-    gate: '#4fb4ff',
-    sky: ['#05051a', '#1a1a4a'],
-    stars: true,
-    name: ['#ffffff', '#bfe4ff', '#4fb4ff'],
+  // A ruined road through a burnt-out wasteland, lava glowing on the cliff tops.
+  wasteland: {
+    floor: '#6a4c3c',
+    floorStyle: STYLE.CRACKED,
+    wall: '#5a3a2a',
+    cap: '#ff5a1c',
+    capStyle: STYLE.LAVA,
+    gate: '#ff4a1c',
+    sky: ['#5a2a2a', '#d8865a'],
+    name: ['#ffd0b0', '#ff7a3c', '#e2240c'],
+    road: { center: 'dash', lines: '#d8d0b0', worn: 0.85, lamp: 'broken' },
   },
-  mars: {
-    floor: '#c8603a',
-    wall: '#8a3a22',
-    cap: '#e07a4a',
-    gate: '#ff6a3a',
-    sky: ['#5a2418', '#e08a5a'],
-    name: ['#ffe0d0', '#ff8a5a', '#c83a1a'],
+  // Dirt and steel: cranes, barriers and cones.
+  construction: {
+    open: true,
+    floor: '#7e6852',
+    floorStyle: STYLE.DIRT,
+    wall: '#8a8e96',
+    cap: '#9a8466',
+    capStyle: STYLE.DIRT,
+    gate: '#ffcc1a',
+    sky: ['#3a8ee8', '#e8dcc0'],
+    name: ['#fff6d0', '#ffd21f', '#e89a1a'],
+    road: { lamp: 'flood', cones: true },
   },
-  asteroid: {
-    floor: '#5a5652',
-    wall: '#3a3634',
-    cap: '#8a8682',
-    gate: '#b0a8ff',
-    sky: ['#05051a', '#241544'],
-    stars: true,
-    name: ['#eeeeff', '#b0a8ff', '#6a5aff'],
+  // A muddy arena floor under floodlights, the stands packed either side.
+  arena: {
+    open: true,
+    floor: '#7a5034',
+    floorStyle: STYLE.DIRT,
+    wall: '#4a4f5c',
+    gate: '#4fdc2a',
+    sky: ['#14183a', '#4a4a8a'],
+    name: ['#e6ffd0', '#8dff4f', '#2fd12f'],
+    road: { lamp: 'flood' },
   },
-  galaxy: {
+  // A road of gold over the clouds.
+  skyway: {
+    open: true,
+    floor: '#f4e2a0',
+    floorStyle: STYLE.TILES,
+    wall: '#eef4ff',
+    cap: '#ffffff',
+    capStyle: STYLE.SMOOTH,
+    gate: '#ffd23f',
+    sky: ['#5ab4ff', '#fff4d6'],
+    name: ['#fffbe6', '#ffe066', '#e8a81a'],
+    road: { center: 'double', edge: true, lines: '#ffffff', lamp: 'gold' },
+  },
+  // The last road: a highway through space, neon down it, planets overhead.
+  mega: {
+    open: true,
     floor: '#2a1a5a',
     floorStyle: STYLE.GALAXY,
     wall: '#1a1240',
     wallStyle: STYLE.GALAXY,
-    cap: '#c08bff',
-    capStyle: STYLE.GLOW,
+    cap: '#2a1a5a',
+    capStyle: STYLE.GALAXY,
     gate: '#ff7ad9',
     sky: ['#05021a', '#3a1a6a'],
     stars: true,
     name: ['#fff0ff', '#ff9bea', '#a03fff'],
+    road: { center: 'dash', edge: true, lines: '#ff7ad9', glowLines: true, lamp: 'neon' },
   },
 }
 

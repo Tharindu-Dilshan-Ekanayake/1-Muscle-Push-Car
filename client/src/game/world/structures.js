@@ -8,6 +8,7 @@ import {
   POTION_STAND,
   SEAT_HEIGHT,
   SHOP_SIGN,
+  TRAIN_SIGN,
   SHOP_STAGES,
   STATUE,
   ZONE_COUNT,
@@ -140,6 +141,8 @@ function trainingBench(blocks, x, y, z, color) {
 
 const STONE = '#8d97a2'
 const STONE_TOP = '#b9c2cc'
+/** The big signs' frames: a warm smooth stone. */
+const SIGN_STONE = '#cfc6b4'
 const SLATE = '#3b4658'
 const RED = '#ff4a3b'
 const GOLD = '#ffd21f'
@@ -158,8 +161,8 @@ export function buildShop(blocks, { detail = true } = {}) {
     const d = s.maxZ - s.minZ
     const cx = (s.minX + s.maxX) / 2
     const cz = (s.minZ + s.maxZ) / 2
-    blocks.addOn(cx, -0.1, cz, w, s.height + 0.1, d, STONE_TOP)
-    blocks.addOn(cx, 0, cz, w + 0.3, s.height * 0.5, d + 0.3, STONE)
+    blocks.addOn(cx, -0.1, cz, w, s.height + 0.1, d, STONE_TOP, STYLE.TILES)
+    blocks.addOn(cx, 0, cz, w + 0.3, s.height * 0.5, d + 0.3, STONE, STYLE.SMOOTH)
     // Light strips along all four top edges, and a gold post at each corner.
     for (const side of [-1, 1]) {
       blocks.addOn(cx + side * (w / 2 - 0.25), s.height, cz, 0.35, 0.08, d - 1.4, RED, STYLE.GLOW)
@@ -170,83 +173,96 @@ export function buildShop(blocks, { detail = true } = {}) {
     }
   }
 
-  // The sign: two striped legs, a slate panel in a stone frame, a gold cap.
-  const { x, minZ, maxZ, top } = SHOP_SIGN
+  bigSign(blocks, SHOP_SIGN, -1, { panel: SLATE, bulb: RED }, detail)
+}
+
+/**
+ * The big TRAINING sign over the Train Zones, the dumbbell sign's twin on the other side
+ * of the square: so from anywhere in it you can see where to train and where to shop.
+ */
+export function buildTrainSign(blocks, { detail = true } = {}) {
+  bigSign(blocks, TRAIN_SIGN, 1, { panel: '#3a2a22', bulb: '#ff8a1e' }, detail)
+}
+
+/**
+ * A big sign along the square's edge (SHOP_SIGN, TRAIN_SIGN), its face turned to
+ * `facing` (-1 west, 1 east): two striped legs, a dark panel in a smooth stone frame
+ * (its lettering is painted on: see signs.js; the back is panelled too, so it looks
+ * finished from behind), a gold cap, and with `detail` bulbs round it.
+ */
+function bigSign(blocks, sign, facing, { panel, bulb }, detail) {
+  const { x, minZ, maxZ, top } = sign
   const length = maxZ - minZ
   const midZ = (minZ + maxZ) / 2
   const bottom = top - 8.2
-  for (const z of [minZ + 1.5, maxZ - 1.5]) blocks.addOn(x + 0.1, 0, z, 0.9, bottom + 0.3, 0.9, STONE, STYLE.STRIPES)
-  blocks.addOn(x, bottom, midZ, 0.6, top - bottom, length, STONE)
-  blocks.addOn(x - 0.1, bottom + 0.5, midZ, 0.6, top - bottom - 1, length - 1, SLATE, STYLE.SMOOTH)
+  for (const z of [minZ + 1.5, maxZ - 1.5]) blocks.addOn(x - facing * 0.1, 0, z, 0.9, bottom + 0.3, 0.9, STONE, STYLE.STRIPES)
+  blocks.addOn(x, bottom, midZ, 0.6, top - bottom, length, SIGN_STONE, STYLE.SMOOTH)
+  for (const face of [facing, -facing]) blocks.addOn(x + face * 0.1, bottom + 0.5, midZ, 0.6, top - bottom - 1, length - 1, panel, STYLE.SMOOTH)
   blocks.addOn(x, top, midZ, 0.9, 0.4, length + 0.4, GOLD, STYLE.GLOW)
   if (detail) {
     for (let z = minZ + 1; z <= maxZ - 0.99; z += 1.5) {
-      blocks.add(x - 0.42, bottom + 0.25, z, 0.16, 0.3, 0.3, Math.round(z) % 2 ? '#ffffff' : RED, STYLE.GLOW)
-      blocks.add(x - 0.42, top - 0.25, z + 0.75, 0.16, 0.3, 0.3, Math.round(z) % 2 ? RED : '#ffffff', STYLE.GLOW)
+      blocks.add(x + facing * 0.42, bottom + 0.25, z, 0.16, 0.3, 0.3, Math.round(z) % 2 ? '#ffffff' : bulb, STYLE.GLOW)
+      blocks.add(x + facing * 0.42, top - 0.25, z + 0.75, 0.16, 0.3, 0.3, Math.round(z) % 2 ? bulb : '#ffffff', STYLE.GLOW)
     }
   }
 }
 
-/** Glowing orb on a pedestal, in an aura's colour. */
 /** An aura on show: a white pedestal, a glowing plate on it, and the aura's orb with a bright core. */
 function auraOrb(blocks, x, base, z, color) {
-  blocks.addOn(x, base, z, 0.66, 0.95, 0.66, '#f4f7fb', STYLE.SMOOTH)
-  blocks.addOn(x, base + 0.95, z, 0.86, 0.12, 0.86, '#c79bff', STYLE.GLOW)
-  blocks.add(x, base + 1.65, z, 0.78, 0.78, 0.78, color, STYLE.GLOW, 0.785, 0.6, 0)
-  blocks.add(x, base + 1.65, z, 0.5, 0.5, 0.5, '#ffffff', STYLE.GLOW, 0, 0.785, 0.6)
+  blocks.addOn(x, base, z, 0.48, 0.7, 0.48, '#f4f7fb', STYLE.SMOOTH)
+  blocks.addOn(x, base + 0.7, z, 0.62, 0.1, 0.62, '#c79bff', STYLE.GLOW)
+  blocks.add(x, base + 1.2, z, 0.56, 0.56, 0.56, color, STYLE.GLOW, 0.785, 0.6, 0)
+  blocks.add(x, base + 1.2, z, 0.36, 0.36, 0.36, '#ffffff', STYLE.GLOW, 0, 0.785, 0.6)
 }
 
 const AURA_PURPLE = '#5b2fb0'
 const AURA_TRIM = '#c79bff'
 
 /**
- * The aura store, a booth: a glowing-edged octagonal floor; a purple backdrop with a
- * lit trim and a great crystal on it, between two pillars topped with gold; every aura
- * on show on its own pedestal in front of it; and the counter you buy at. And the
- * potion stand: two tall glowing tubes, yellow and pink, in white frames.
+ * The two little kiosks by the road's gate, both facing the square (south). The aura
+ * kiosk: a glowing-edged octagonal floor, a purple backdrop with a lit trim and a crystal
+ * on it between two gold-topped pillars, every aura on show on its own pedestal, and
+ * the counter you buy at. The potion kiosk: two glowing tubes, yellow and pink, in white
+ * frames on a low counter, a pipe joining them overhead. (Their striped canopies are the
+ * town's: see town.js.)
  */
 export function buildStands(blocks) {
   {
     const { x, z } = AURA_STAND
-    const floor = 0.22
-    // The floor: two squares turned an eighth apart, edged with light.
+    const floor = 0.18
     for (const turn of [0, Math.PI / 4]) {
-      blocks.addOn(x, 0, z, 7.9, 0.14, 7.9, AURA_TRIM, STYLE.GLOW, turn)
-      blocks.addOn(x, 0, z, 7.6, floor, 7.6, '#3b2a74', STYLE.STUDS, turn)
+      blocks.addOn(x, 0, z, 5.6, 0.12, 5.6, AURA_TRIM, STYLE.GLOW, turn)
+      blocks.addOn(x, 0, z, 5.4, floor, 5.4, '#3b2a74', STYLE.STUDS, turn)
     }
-    // The backdrop and its pillars.
-    const back = z - 3.5
-    blocks.addOn(x, floor, back, 7.4, 4.4, 0.5, AURA_PURPLE, STYLE.STUDS)
-    blocks.addOn(x, floor + 4.4, back, 7.6, 0.25, 0.7, AURA_TRIM, STYLE.GLOW)
-    blocks.add(x, floor + 3, back + 0.3, 1.3, 1.3, 0.2, '#e8d8ff', STYLE.GLOW, 0, 0, Math.PI / 4)
+    const back = z - 2.4
+    blocks.addOn(x, floor, back, 5.2, 3.1, 0.4, AURA_PURPLE, STYLE.STUDS)
+    blocks.addOn(x, floor + 3.1, back, 5.4, 0.2, 0.55, AURA_TRIM, STYLE.GLOW)
+    blocks.add(x, floor + 2.2, back + 0.25, 0.9, 0.9, 0.16, '#e8d8ff', STYLE.GLOW, 0, 0, Math.PI / 4)
     for (const side of [-1, 1]) {
-      blocks.addOn(x + side * 3.95, 0, back, 0.9, floor + 5, 0.9, '#7a4ad8', STYLE.STUDS)
-      blocks.add(x + side * 3.95, floor + 5.5, back, 0.8, 0.8, 0.8, '#ffd21f', STYLE.GLOW, 0.785, 0.6, 0)
+      blocks.addOn(x + side * 2.75, 0, back, 0.6, floor + 3.6, 0.6, '#7a4ad8', STYLE.STUDS)
+      blocks.add(x + side * 2.75, floor + 4, back, 0.55, 0.55, 0.55, '#ffd21f', STYLE.GLOW, 0.785, 0.6, 0)
     }
-    // Every aura on show, in a row before the backdrop.
     const auras = Object.values(AURAS)
-    auras.forEach((aura, i) => auraOrb(blocks, x + (i - (auras.length - 1) / 2) * 1.3, floor, z - 2.4, aura.color))
-    // The counter.
-    blocks.addOn(x, floor, z - 1.2, 5.6, 0.85, 1.3, AURA_PURPLE, STYLE.STUDS)
-    blocks.addOn(x, floor + 0.85, z - 1.2, 5.9, 0.16, 1.6, AURA_TRIM, STYLE.GLOW)
+    auras.forEach((aura, i) => auraOrb(blocks, x + (i - (auras.length - 1) / 2) * 0.95, floor, z - 1.6, aura.color))
+    blocks.addOn(x, floor, z - 0.6, 4, 0.75, 0.9, AURA_PURPLE, STYLE.STUDS)
+    blocks.addOn(x, floor + 0.75, z - 0.6, 4.2, 0.12, 1.1, AURA_TRIM, STYLE.GLOW)
   }
   {
     const { x, z } = POTION_STAND
-    const tx = x - 1.2
-    blocks.addOn(tx, 0, z, 2.2, 0.5, 5.4, '#e6edf5', STYLE.STUDS)
-    for (const [dz, color] of [
-      [-1.25, '#ffe14a'],
-      [1.25, '#ff8fe0'],
+    const tz = z - 0.4
+    blocks.addOn(x, 0, tz, 3.8, 0.4, 1.6, '#e6edf5', STYLE.STUDS)
+    for (const [dx, color] of [
+      [-0.95, '#ffe14a'],
+      [0.95, '#ff8fe0'],
     ]) {
-      blocks.addOn(tx, 0.5, z + dz, 1.5, 0.35, 1.5, '#9aa4b0', STYLE.SMOOTH)
-      blocks.addOn(tx, 0.85, z + dz, 1.2, 3.4, 1.2, color, STYLE.GLOW)
-      blocks.addOn(tx, 4.25, z + dz, 1.5, 0.35, 1.5, '#9aa4b0', STYLE.SMOOTH)
+      blocks.addOn(x + dx, 0.4, tz, 1.2, 0.25, 1.2, '#9aa4b0', STYLE.SMOOTH)
+      blocks.addOn(x + dx, 0.65, tz, 0.95, 2.4, 0.95, color, STYLE.GLOW)
+      blocks.addOn(x + dx, 3.05, tz, 1.2, 0.25, 1.2, '#9aa4b0', STYLE.SMOOTH)
       // A bottle standing inside, and the white frame round the tube.
-      blocks.addOn(tx, 1.6, z + dz, 0.5, 0.9, 0.5, '#ffffff', STYLE.GLOW)
-      for (const corner of [-1, 1]) blocks.addOn(tx + corner * 0.68, 0.85, z + dz + 0.68, 0.12, 3.4, 0.12, '#ffffff', STYLE.SMOOTH)
+      blocks.addOn(x + dx, 1.2, tz, 0.4, 0.7, 0.4, '#ffffff', STYLE.GLOW)
+      for (const corner of [-1, 1]) blocks.addOn(x + dx + corner * 0.55, 0.65, tz + 0.55, 0.1, 2.4, 0.1, '#ffffff', STYLE.SMOOTH)
     }
-    // Pipes joining them overhead.
-    blocks.addOn(tx, 4.6, z, 0.3, 0.3, 3, '#ffd21f', STYLE.GLOW)
+    blocks.addOn(x, 3.3, tz, 2.2, 0.24, 0.24, '#ffd21f', STYLE.GLOW)
   }
 }
 
@@ -260,7 +276,7 @@ const STATUE_SCALE = 1.1
 const SHOE = '#f4f7fb'
 
 /**
- * The big bodybuilder statue by the boulder, flexing both arms at the plaza: the
+ * The big bodybuilder statue by the vehicle, flexing both arms at the plaza: the
  * players' own rounded body at its biggest (muscleBody), in a black shirt with a blue
  * tie and belt, on a stone plinth. Faces south. Its body goes in `props` (merged, one
  * draw call); the plinth and the blocky head in `blocks`.

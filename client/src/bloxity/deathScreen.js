@@ -2,7 +2,7 @@ import { getGame } from '../store/game'
 import { getSDK, safeCall } from './sdk'
 
 /**
- * Boxity's death screen. When the boulder crushes you, Boxity may show ads around the
+ * Boxity's death screen. When your vehicle rolls back over you, Boxity may show ads around the
  * game while you're down, and the game's own Respawn button (DeathCard) waits out its
  * countdown - at least 4 s - so they're seen. Never a respawn on a timer: only the
  * button, once Boxity says so. Outside Boxity, or with no ads to show, the countdown is
