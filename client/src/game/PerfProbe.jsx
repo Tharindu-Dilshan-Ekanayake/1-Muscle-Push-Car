@@ -14,10 +14,13 @@ export function PerfProbe() {
   const scene = useThree((s) => s.scene)
   const acc = useRef({ frames: 0, since: 0, maxCalls: 0, maxTriangles: 0 })
 
-  // With ?debug, the scene too, for the automated texture-memory audit.
+  // With ?debug, the scene and the renderer too, for the automated audits.
   useEffect(() => {
-    if (window.__pp) window.__ppScene = scene
-  }, [scene])
+    if (window.__pp) {
+      window.__ppScene = scene
+      window.__ppGl = gl
+    }
+  }, [scene, gl])
 
   useFrame(() => {
     const info = gl.info

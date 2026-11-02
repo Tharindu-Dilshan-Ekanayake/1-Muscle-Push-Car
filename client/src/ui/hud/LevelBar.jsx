@@ -7,6 +7,7 @@ import { getGame, useGame } from '../../store/game'
 import Icon from '../Icon'
 import StrokeText from '../StrokeText'
 import { ChunkyButton, Price } from './parts'
+import { pick, useHudLayout } from './layout'
 import { u } from './style'
 
 /** Width of the bar, in reference pixels; the packs line up under it. */
@@ -82,9 +83,17 @@ export function LevelBar() {
   const world = useGame((s) => s.profile.world)
   const wins = useGame((s) => s.profile.wins)
   const packs = musclePacks({ level, rebirths, world })
+  const layout = useHudLayout()
+  // Bottom centre. Held sideways, a little shorter and nudged left, clear of the LIFT and
+  // jump buttons; held upright, as wide as the screen allows.
+  const box = pick(layout, {
+    desktop: { left: '50%', width: u(WIDTH) },
+    landscape: { left: 'calc(50% - 40px)', width: u(700) },
+    portrait: { left: '50%', width: u(780) },
+  })
 
   return (
-    <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 flex-col items-center" style={{ bottom: u(18), width: u(WIDTH), gap: u(14) }}>
+    <div className="pointer-events-none absolute flex -translate-x-1/2 flex-col items-center" style={{ bottom: u(18), gap: u(14), ...box }}>
       <Bar />
       <div className="flex justify-center" style={{ gap: u(26) }}>
         {packs.map((pack, i) => (

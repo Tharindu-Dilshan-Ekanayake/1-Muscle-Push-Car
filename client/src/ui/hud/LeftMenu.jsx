@@ -1,13 +1,14 @@
 import { MAX_EQUIPPED_PETS } from '@shared/balance'
 import { dailyStatus, isMaxLevel } from '@shared/logic'
 
-import { useClearTop } from '../../bloxity/reserved'
+import { useClearLeft, useClearTop } from '../../bloxity/reserved'
 import { useBloxityStore } from '../../bloxity/store'
 import { useGame } from '../../store/game'
 import useNow from '../useNow'
 import Icon from '../Icon'
 import StrokeText from '../StrokeText'
 import { AlertBadge, ChunkyButton } from './parts'
+import { pick, useHudLayout } from './layout'
 import { GRADIENTS, u } from './style'
 
 /** The tiles' faces: deep, slightly purple-tinted squares, as in the reference. */
@@ -46,15 +47,21 @@ export function LeftMenu() {
   // Inside Boxity its menu has the settings, and its toolbar and chat take the top-left.
   const embedded = useBloxityStore((s) => s.embedded)
   const clear = useClearTop(0, 0.3)
+  const layout = useHudLayout()
+  const toolbar = useClearLeft(40)
+  // As in the reference on a full-size screen. Held sideways, one row along the top,
+  // between Boxity's toolbar and our buttons in the corner (the left side's for the Wins
+  // and Muscle and the joystick); held upright, three across under the Wins and Muscle.
+  const place = pick(layout, {
+    desktop: { left: u(18), top: `max(${u(150)}, min(${u(340)}, calc(100vh - ${u(760)})), ${clear + 8}px)` },
+    landscape: { left: `max(${u(18)}, ${toolbar + 8}px)`, top: u(10), transform: 'scale(0.86)', transformOrigin: 'top left' },
+    portrait: { left: u(18), top: `calc(${u(244)} + ${clear}px)` },
+  })
+  const columns = pick(layout, { desktop: 'grid-cols-2', landscape: 'grid-cols-6', portrait: 'grid-cols-3' })
 
   return (
-    // As in the reference on a full-size screen; higher up on short ones (landscape
-    // phones), so it stays clear of the Wins and Muscle in the corner below.
-    <div
-      className="pointer-events-none absolute flex flex-col"
-      style={{ left: u(18), top: `max(${u(150)}, min(${u(340)}, calc(100vh - ${u(760)})), ${clear + 8}px)`, gap: u(12) }}
-    >
-      <div className="grid grid-cols-2" style={{ gap: u(8) }}>
+    <div className="pointer-events-none absolute flex flex-col" style={{ gap: u(12), ...place }}>
+      <div className={`grid ${columns}`} style={{ gap: u(8) }}>
         <MenuTile icon="pets" label="Pets" alert={petAlert} onClick={() => togglePanel('pets')} />
         <MenuTile icon="store" label="Store" top="SALE!" red onClick={() => togglePanel('store')} />
         <MenuTile icon="gift" label="Gifts" alert={giftAlert} onClick={() => togglePanel('daily')} />

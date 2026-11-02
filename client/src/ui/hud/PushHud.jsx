@@ -12,6 +12,8 @@ import DeathCard from './DeathCard'
 import Icon from '../Icon'
 import StrokeText from '../StrokeText'
 import { ChunkyButton } from './parts'
+import { useClearTop } from '../../bloxity/reserved'
+import { useHudLayout } from './layout'
 import { GRADIENTS, u } from './style'
 
 const stageGradient = (i) => {
@@ -27,13 +29,25 @@ const UPDATE_MS = 1000 / 15
  * going red as it runs out. Written from the frame-rate push state by a timer, never by
  * React.
  */
+/**
+ * Where the push's own counters go: across the top, below Boxity's toolbar where it
+ * reaches over. Held upright the power is already in the corner (StatsPanel), so the big
+ * counter stays out of the way and the stage's name sits right of centre, clear of it.
+ */
+function usePushPlace() {
+  const layout = useHudLayout()
+  const clear = useClearTop(0.3, 0.7)
+  return { layout, clear }
+}
+
 function PowerCounter() {
   const ref = useRef(null)
+  const { layout, clear } = usePushPlace()
   useEffect(() => {
     let shown = null
     const id = setInterval(() => {
       const el = ref.current
-      if (!el) return
+      if (!el || !push.active) return
       const left = Math.floor(powerLeft())
       const text = formatNumber(left)
       if (text === shown) return
@@ -48,7 +62,8 @@ function PowerCounter() {
     <div
       className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center justify-center"
       style={{
-        top: u(14),
+        display: layout === 'portrait' ? 'none' : undefined,
+        top: `calc(${u(14)} + ${clear}px)`,
         height: u(112),
         padding: `0 ${u(70)}`,
         gap: u(14),
@@ -69,12 +84,14 @@ function PowerCounter() {
  * frame-rate push state by a timer, never by React.
  */
 function Climb() {
+  const { layout, clear } = usePushPlace()
   const stageRef = useRef(null)
   const meterRef = useRef(null)
   useEffect(() => {
     let shownStage = null
     let shownMeter = -1
     const id = setInterval(() => {
+      if (!push.active) return
       const meter = Math.max(0, push.meter)
       // Up a slope, its stage's name; on the flat between two, SAFEZONE.
       const si = stageAt(meter)
@@ -96,7 +113,10 @@ function Climb() {
   }, [])
 
   return (
-    <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-baseline" style={{ top: u(120), gap: u(14) }}>
+    <div
+      className="pointer-events-none absolute flex -translate-x-1/2 items-baseline"
+      style={{ left: layout === 'portrait' ? '62%' : '50%', top: `calc(${u(layout === 'portrait' ? 14 : 120)} + ${clear}px)`, gap: u(14) }}
+    >
       <span ref={stageRef} className="pp-text" style={{ fontSize: u(38) }}>
         <span data-stage aria-hidden="true" className="pp-text-stroke" style={{ WebkitTextStrokeWidth: u(9) }} />
         <span data-stage data-stage-fill className="pp-text-fill" style={{ WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }} />
@@ -111,6 +131,7 @@ function Climb() {
 
 /** The last of your power: "LOW POWER!" shaking under the counter. */
 function LowPower() {
+  const { layout, clear } = usePushPlace()
   const ref = useRef(null)
   useEffect(() => {
     const id = setInterval(() => {
@@ -119,7 +140,7 @@ function LowPower() {
     return () => clearInterval(id)
   }, [])
   return (
-    <div ref={ref} className="pp-shake pointer-events-none absolute left-1/2" style={{ top: u(186), marginLeft: u(-160), width: u(320), textAlign: 'center', opacity: 0 }}>
+    <div ref={ref} className="pp-shake pointer-events-none absolute left-1/2" style={{ top: layout === 'portrait' ? '44%' : `calc(${u(186)} + ${clear}px)`, marginLeft: u(-160), width: u(320), textAlign: 'center', opacity: 0 }}>
       <span style={{ fontSize: u(44) }}>
         <StrokeText stroke={u(10)} gradient={GRADIENTS.priceShort}>
           LOW POWER!
@@ -228,17 +249,18 @@ export function PushHud() {
   const pushing = useGame((s) => s.pushing)
   // Crushed: the death card's Respawn is the way back, not the Lobby button.
   const dead = useGame((s) => s.death !== null)
-  if (!pushing) return null
+  // Mounted all along and only hidden in the lobby (its timers idle there): mounting it
+  // as a push started held up that frame.
   return (
-    <>
+    <div className="contents" style={{ visibility: pushing ? 'visible' : 'hidden' }}>
       <PowerCounter />
       <Climb />
       <LowPower />
-      <FreeHint />
+      {pushing && <FreeHint />}
       <Banner />
       <DeathCard />
-      {!dead && <LobbyButton />}
-    </>
+      {pushing && !dead && <LobbyButton />}
+    </div>
   )
 }
 

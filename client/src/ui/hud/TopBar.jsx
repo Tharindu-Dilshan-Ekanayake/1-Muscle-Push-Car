@@ -6,6 +6,7 @@ import { useBloxityStore } from '../../bloxity/store'
 import { useGame } from '../../store/game'
 import AuthHUD from '../AuthHUD'
 import Icon from '../Icon'
+import { NARROW_LANDSCAPE, useHudLayout, useMedia } from './layout'
 import { AlertBadge, ChunkyButton } from './parts'
 import { GRADIENTS, u } from './style'
 
@@ -34,13 +35,18 @@ export function TopBar() {
   // Inside Boxity its trophy button has the leaderboards; on a phone its toolbar spans
   // the top, so this sits below it.
   const embedded = useBloxityStore((s) => s.embedded)
-  const clear = useClearTop(0.55, 1)
+  // Held upright, the same three in the corner, just under Boxity's toolbar (the passes
+  // come next, smaller, below them: PassButtons).
+  const portrait = useHudLayout() === 'portrait'
+  // On the narrowest phones held sideways the menu row takes the room the name tag would.
+  const narrow = useMedia(NARROW_LANDSCAPE)
+  const clear = useClearTop(portrait ? 0.72 : 0.55, 1)
 
   return (
     <div className="pointer-events-none absolute flex items-center" style={{ right: u(16), top: `calc(${u(14)} + ${clear}px)`, gap: u(12) }}>
       <SoundButton />
       {!embedded && <RoundButton icon="star" label="Leaderboards" onClick={() => openPanel('leaderboards')} iconSize={34} />}
-      <AuthHUD />
+      {!narrow && <AuthHUD />}
     </div>
   )
 }

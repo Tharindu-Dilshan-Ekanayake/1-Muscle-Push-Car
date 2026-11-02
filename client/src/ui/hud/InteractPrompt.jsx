@@ -10,6 +10,7 @@ import { buy } from '../../net/shop'
 import { useGame } from '../../store/game'
 import Icon from '../Icon'
 import StrokeText from '../StrokeText'
+import { PORTRAIT_ACTIONS_UP, useHudLayout } from './layout'
 import { GRADIENTS, u } from './style'
 
 /**
@@ -112,6 +113,10 @@ export function InteractPrompt() {
   const run = !busy ? prompt?.run : null
   const hold = Boolean(prompt?.hold)
   const [holding, setHolding] = useState(false)
+  const layout = useHudLayout()
+  // Held upright, the PUSH button stands where LIFT does, over the level bar, and the
+  // prompt above it.
+  const up = layout === 'portrait' ? `calc(var(--px) * ${PORTRAIT_ACTIONS_UP})` : '0px'
   // The finger (or mouse) holding the prompt: only its lifting lets go, not another
   // finger's - a thumb coming off the joystick mustn't drop the vehicle.
   const holdPointer = useRef(null)
@@ -170,7 +175,7 @@ export function InteractPrompt() {
         type="button"
         aria-label="Push"
         className="pp-btn pp-chunky pp-pulse pointer-events-auto absolute flex touch-none flex-col items-center justify-center rounded-full"
-        style={{ width: 104, height: 104, background: GRADIENTS.greenButton, border: '4px solid #111', right: 96, bottom: 12 }}
+        style={{ width: 104, height: 104, background: GRADIENTS.greenButton, border: '4px solid #111', right: 96, bottom: `calc(${up} + 12px)` }}
         onPointerDown={grab}
         onPointerLeave={letGo}
         onContextMenu={(e) => e.preventDefault()}
@@ -194,7 +199,7 @@ export function InteractPrompt() {
       className="pp-btn pointer-events-auto absolute flex items-center"
       style={{
         left: '50%',
-        top: '68%',
+        top: layout === 'portrait' ? '62%' : '68%',
         transform: 'translateX(-50%)',
         gap: u(12),
         padding: `${u(8)} ${u(24)} ${u(8)} ${u(prompt.run ? 8 : 24)}`,
