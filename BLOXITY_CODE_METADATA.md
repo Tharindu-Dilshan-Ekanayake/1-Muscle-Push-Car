@@ -1,5 +1,5 @@
 ---
-gameId: 1-muscle-to-push-boulder
+gameId: 1-muscle-push-car
 clientDir: client
 buildCommand: npm run build
 distDir: client/dist
@@ -19,7 +19,7 @@ notApplicable:
   playWithFriends: Hosted on Boxity and joining through its matchmaker, so Boxity's own private rooms seat invited friends together; the game makes no private rooms of its own for CrazyGames' instant join.
 ---
 
-# +1 Muscle to Push Cars on Boxity
+# +1 Muscle Push Car on Boxity
 
 Where each piece of the Boxity integration lives:
 

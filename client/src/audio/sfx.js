@@ -4,9 +4,12 @@ import { createMusic } from './music'
  * Sound effects and the background music, synthesised with WebAudio: no audio files
  * to download.
  *
- * Browsers only allow audio after a user gesture, so the AudioContext is created on
- * the first tap/click/key (which also starts the music) and every sound before that is
- * silently skipped.
+ * Browsers only allow audio after a user gesture, so nothing sounds until the first
+ * tap/click/key (which also starts the music); every sound before that is silently
+ * skipped. The AudioContext itself is made earlier, though, suspended (prepareAudio):
+ * creating one can block the page for a few hundred milliseconds on some machines, and
+ * doing that inside the first tap froze the game just as you first touched it. The tap
+ * only resumes it.
  */
 
 const MUTE_KEY = 'mb.muted'
@@ -36,11 +39,17 @@ function readMuted() {
   }
 }
 
-function unlock() {
-  if (ctx) {
-    if (ctx.state === 'suspended') ctx.resume()
-    return
-  }
+/** True once the player's first gesture has let the sound out. */
+let unlocked = false
+
+/**
+ * Makes the AudioContext and everything the sounds share - the master gain, the echo,
+ * the noise, the vehicles' rumble - suspended and silent until unlock(). Called while
+ * the game loads, when the main thread is waiting on the GPU anyway (see ShaderWarmup),
+ * so the time creating a context can take never lands in a frame. Safe to call again.
+ */
+export function prepareAudio() {
+  if (ctx) return
   const Ctor = window.AudioContext || window.webkitAudioContext
   if (!Ctor) return
   ctx = new Ctor()
@@ -52,9 +61,20 @@ function unlock() {
   noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
   const data = noiseBuffer.getChannelData(0)
   for (let i = 0; i < data.length; i += 1) data[i] = Math.random() * 2 - 1
+  rollBuffers()
   music = createMusic(ctx, master, noiseBuffer)
   music.setVolume(musicVolume)
-  music.start()
+}
+
+/** The first gesture: the sound comes on (made now, if loading never got to it), and the music starts. */
+function unlock() {
+  prepareAudio()
+  if (!ctx) return
+  if (ctx.state === 'suspended') ctx.resume()
+  if (!unlocked) {
+    unlocked = true
+    music.start()
+  }
 }
 
 /**
@@ -87,7 +107,7 @@ export function installAudioUnlock() {
   for (const e of events) window.addEventListener(e, handler, true)
   // Mobile browsers suspend audio in the background; resume on return.
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && ctx?.state === 'suspended') ctx.resume()
+    if (unlocked && document.visibilityState === 'visible' && ctx?.state === 'suspended') ctx.resume()
   })
 }
 

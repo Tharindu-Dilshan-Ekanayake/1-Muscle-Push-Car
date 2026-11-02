@@ -1,6 +1,8 @@
 import { useThree } from '@react-three/fiber'
 import { useLayoutEffect } from 'react'
 
+import { prepareAudio } from '../audio/sfx'
+
 /** Layer nothing lives on: the main camera looks at it while shaders compile. */
 const BLANK_LAYER = 31
 
@@ -38,7 +40,11 @@ export function ShaderWarmup({ onDone }) {
     const probe = camera.clone()
     probe.layers.set(0)
     performance.mark('pp:compile-start')
-    gl.compileAsync(scene, probe)
+    const compiling = gl.compileAsync(scene, probe)
+    // While the GPU compiles, the main thread mostly waits: the moment to make the
+    // (silent, suspended) audio, which can block for a few hundred milliseconds.
+    setTimeout(prepareAudio, 0)
+    compiling
       .catch((err) => console.warn('[warmup] shader precompile failed', err))
       .finally(() => {
         if (cancelled) return

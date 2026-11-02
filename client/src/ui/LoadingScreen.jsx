@@ -58,7 +58,7 @@ export function LoadingScreen({ done }) {
 
       <h1 className="m-0 text-center leading-none" style={{ fontSize: 'clamp(40px, 9vw, 96px)', transform: 'rotate(-3deg)' }}>
         <StrokeText stroke="0.16em" gradient="linear-gradient(180deg, #ffffff 0%, #ffffff 55%, #ffe36b 56%, #ffb21e 100%)">
-          +1 MUSCLE TO PUSH CARS
+          +1 MUSCLE PUSH CAR
         </StrokeText>
       </h1>
 
