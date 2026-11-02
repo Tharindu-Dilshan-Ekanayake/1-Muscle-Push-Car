@@ -7,7 +7,7 @@ import StrokeText from '../StrokeText'
 import GiftTimer from './GiftTimer'
 import { Price } from './parts'
 import { useClearTop } from '../../bloxity/reserved'
-import { pick, useHudLayout } from './layout'
+import { NARROW_LANDSCAPE, pick, useHudLayout, useMedia } from './layout'
 import { GRADIENTS, u } from './style'
 
 /** X2 WINS only shows where there's room for it (it's in the Store too). */
@@ -76,6 +76,9 @@ const COLUMN_SCALE = 0.66
 export function PassButtons() {
   const pushing = useGame((s) => s.pushing)
   const layout = useHudLayout()
+  // The narrowest sideways phones are too short for the whole column: the gift only
+  // (the x2 passes are in the Store).
+  const short = useMedia(NARROW_LANDSCAPE)
   const clear = useClearTop(0.72, 1)
   // On a phone, smaller still: it has to stop short of the LIFT button below it. Always
   // under the top-right buttons (and Boxity's toolbar, where it reaches across).
@@ -90,7 +93,7 @@ export function PassButtons() {
       style={{ right: u(20), top, gap: u(18), transform: `scale(${scale})`, transformOrigin: 'top right' }}
     >
       <GiftTimer />
-      <div className="flex flex-col items-center" style={{ gap: u(18), visibility: pushing ? 'hidden' : 'visible' }}>
+      <div className="flex flex-col items-center" style={{ gap: u(18), visibility: pushing ? 'hidden' : 'visible', display: short ? 'none' : undefined }}>
         {PASSES.map((pass) => (
           <PassButton key={pass.product} {...pass} />
         ))}
