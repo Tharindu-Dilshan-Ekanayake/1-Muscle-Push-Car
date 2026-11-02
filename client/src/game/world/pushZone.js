@@ -12,7 +12,7 @@ const WOOD_SEAM = '#c8702a'
 const TRIM = '#ffd21f'
 
 /**
- * The wooden sign beside the boulder: its board's middle, the board's size, and how far
+ * The wooden sign beside the car: its board's middle, the board's size, and how far
  * it's turned (about y) towards the plaza.
  */
 export const PUSH_SIGN = { x: -TRACK_HALF_WIDTH - 2.6, y: 2.8, z: TRACK_START_Z + 2.4, width: 4.4, height: 2.4, yaw: 0.35 }
@@ -26,7 +26,7 @@ export function onPushSign(u, y, w) {
 /**
  * The foot of the track: its first stage's floor running out onto the plaza as the PUSH ZONE
  * (painted with PUSH! - see signs.js), white chevrons pointing up the mountain, and the
- * reference's orange wooden "Push Boulder to START!" sign by the boulder (its words are
+ * reference's orange wooden "Push a Car to START!" sign by the car (its words are
  * painted on too). Boxes in the world's block set: no extra draw calls.
  *
  * No two faces here share a plane: every layer stands a clear step proud of what it

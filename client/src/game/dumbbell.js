@@ -1,6 +1,7 @@
 import { BufferAttribute, BufferGeometry, Color, CylinderGeometry, InstancedBufferAttribute, InstancedMesh, Matrix4, Vector3 } from 'three'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
+import { useQuality } from '../store/quality'
 import { sharedMaterials, STYLE } from './materials'
 
 /**
@@ -67,18 +68,21 @@ let baseGeometry = null
  * collar either side of it; then at each end a small plate, a big plate with a bright
  * rim round its face, a dark hub and a chrome end cap. Plates take the instance colour
  * fully; the metal is shaded darker or brighter, so it reads as metal in every colour.
- * About 630 triangles.
+ * About 630 triangles; on LOW (where twenty stand in the shop at once) about 330, its
+ * round parts with fewer sides.
  */
 function dumbbellGeometry() {
   if (baseGeometry) return baseGeometry
-  const pieces = [part(0.042, 0.78, 0, 8, 0.7), part(0.052, 0.28, 0, 10, 0.42)]
+  const low = useQuality.getState().level === 'LOW'
+  const sides = (n) => (low ? Math.max(6, Math.round(n * 0.55)) : n)
+  const pieces = [part(0.042, 0.78, 0, sides(8), 0.7), part(0.052, 0.28, 0, sides(10), 0.42)]
   for (const side of [-1, 1]) {
-    pieces.push(part(0.072, 0.035, side * 0.165, 10, 1.25))
-    pieces.push(part(0.17, 0.07, side * 0.205, 14, 0.9))
-    pieces.push(part(0.235, 0.11, side * 0.29, 14, 1))
-    pieces.push(part(0.248, 0.03, side * 0.335, 14, 1.18))
-    pieces.push(part(0.09, 0.03, side * 0.36, 10, 0.55))
-    pieces.push(part(0.058, 0.04, side * 0.385, 8, 1.3))
+    pieces.push(part(0.072, 0.035, side * 0.165, sides(10), 1.25))
+    pieces.push(part(0.17, 0.07, side * 0.205, sides(14), 0.9))
+    pieces.push(part(0.235, 0.11, side * 0.29, sides(14), 1))
+    pieces.push(part(0.248, 0.03, side * 0.335, sides(14), 1.18))
+    pieces.push(part(0.09, 0.03, side * 0.36, sides(10), 0.55))
+    pieces.push(part(0.058, 0.04, side * 0.385, sides(8), 1.3))
   }
   baseGeometry = mergeGeometries(pieces, false)
   for (const piece of pieces) piece.dispose()

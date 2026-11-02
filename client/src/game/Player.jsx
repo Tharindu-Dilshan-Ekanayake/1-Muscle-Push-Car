@@ -40,7 +40,7 @@ const JUMP_SPEED = 10.5
 const STEP_UP = 1.05
 /** A click's curl takes this long. */
 const CURL_MS = 380
-/** Facing up the track, at the boulder; at the top, turned to the camera at your side. */
+/** Facing up the track, at the vehicle; at the top, turned to the camera at your side. */
 const UPHILL_YAW = Math.PI
 const CHEER_YAW = Math.PI / 2
 /** At the top, the cheer comes in over this long. */
@@ -100,7 +100,7 @@ function pushOut(pos, rect) {
  * In the plaza you walk and curl your dumbbell when you click. Step onto a Train Zone's
  * pad and you walk yourself to its long bench, sit and curl on a loop, until you move
  * or jump (walking into the bench sits you too). Up the mountain
- * you push a boulder - forward drives it, sideways steers -
+ * you push a vehicle - forward drives it, sideways steers -
  * and between pushes you walk about the SAFEZONE you've reached, just as in the plaza.
  * Your logical position stays on the PUSH ZONE all the while (it's what the server
  * checks); only the drawn character climbs the mountain.
@@ -186,7 +186,7 @@ export function Player({ onAvatarReady }) {
     const held = heldRef.current
     held?.setDumbbell(profile.equippedDumbbell)
 
-    // --- Pushing a boulder --------------------------------------------------------
+    // --- Pushing a vehicle --------------------------------------------------------
     const free = push.active && push.phase === 'free'
     if (push.active && !free && group && visual) {
       pushInput.forward = Math.max(k.forward ? 1 : 0, joy.joyY > 0.2 ? Math.min(1, joy.joyY * 1.3) : 0)
@@ -205,7 +205,7 @@ export function Player({ onAvatarReady }) {
       group.position.copy(push.position)
       _targetQuat.setFromAxisAngle(_up, push.phase === 'top' ? CHEER_YAW : UPHILL_YAW)
       visual.quaternion.slerp(_targetQuat, 1 - Math.pow(0.001, delta))
-      // Crushed: squashed flat under the boulder as it rolls over you.
+      // Crushed: squashed flat under the vehicle as it rolls over you.
       const c = push.phase === 'crushed' ? Math.min(1, Math.max(0, (push.crush - 0.45) / 0.3)) : 0
       group.scale.set(1 + 0.35 * c, 1 - 0.88 * c, 1 + 0.35 * c)
       shownAt.copy(push.position)
@@ -226,7 +226,7 @@ export function Player({ onAvatarReady }) {
       return
     }
     if (wasPushing.current && group && visual) {
-      // Off the boulder: back in the plaza, or free in a SAFEZONE facing on up.
+      // Off the vehicle: back in the plaza, or free in a SAFEZONE facing on up.
       wasPushing.current = false
       velocity.current.set(0, 0, 0)
       vy.current = 0

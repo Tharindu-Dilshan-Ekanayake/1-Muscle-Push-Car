@@ -1,6 +1,6 @@
 import { CanvasTexture, LinearMipmapLinearFilter, MeshBasicMaterial, PlaneGeometry, SRGBColorSpace } from 'three'
 
-import { PUSH_ZONE, SHOP_SIGN } from '@shared/world'
+import { PUSH_ZONE, SHOP_SIGN, TRAIN_SIGN } from '@shared/world'
 
 import { onPushSign, PUSH_SIGN } from './pushZone'
 
@@ -81,8 +81,8 @@ function paintLine(ctx, { text, fill, edge }, width, height, top, slant) {
 
 /**
  * The painted signs, drawn once the font has loaded: "PUSH!" across the push zone at the
- * foot of the track, "Push Boulder to START!" on the wooden sign by the boulder and
- * "DUMBBELLS" on the shop's sign. Each sits a couple of
+ * foot of the track, "Push a Car to START!" on the wooden sign by the car,
+ * "DUMBBELLS" on the shop's sign and "TRAINING" on the Train Zones'. Each sits a couple of
  * centimetres proud of what it's painted on, so it can't sink into it.
  *
  * @param {number} maxTexture texture size cap for the preset
@@ -114,11 +114,22 @@ export async function createPaintedSigns(maxTexture) {
   shop.position = [SHOP_SIGN.x - 0.43, SHOP_SIGN.top - 4.1, (SHOP_SIGN.minZ + SHOP_SIGN.maxZ) / 2]
   shop.rotation = [0, -Math.PI / 2, 0]
 
+  // TRAINING on its twin over the Train Zones, facing the other way (east).
+  const train = paintText('TRAINING', maxTexture, {
+    aspect: 0.22,
+    fill: ['#fff6c8', '#ffd24a', '#ff8a1e'],
+    edge: '#a8501a',
+    slant: 0.14,
+    worldWidth: TRAIN_SIGN.maxZ - TRAIN_SIGN.minZ - 3,
+  })
+  train.position = [TRAIN_SIGN.x + 0.43, TRAIN_SIGN.top - 4.1, (TRAIN_SIGN.minZ + TRAIN_SIGN.maxZ) / 2]
+  train.rotation = [0, Math.PI / 2, 0]
+
   // The start sign's words, on its board's planks, turned with it.
   const { y, width, height, yaw } = PUSH_SIGN
   const start = paintText(
     [
-      { text: 'Push Boulder', fill: ['#ffffff', '#ffffff', '#ffe6c4'], edge: '#7a3f12' },
+      { text: 'Push a Car', fill: ['#ffffff', '#ffffff', '#ffe6c4'], edge: '#7a3f12' },
       { text: 'to START!', fill: ['#fff7a8', '#ffd21f', '#ff9c00'], edge: '#7a3f12' },
     ],
     maxTexture,
@@ -127,5 +138,5 @@ export async function createPaintedSigns(maxTexture) {
   start.position = onPushSign(0, y, 0.17)
   start.rotation = [0, yaw, 0]
 
-  return [zone, start, shop]
+  return [zone, start, shop, train]
 }

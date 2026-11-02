@@ -253,7 +253,7 @@ export function applyRebirth(profile) {
   return { ok: true, rebirths: profile.rebirths }
 }
 
-// --- The boulder tracks ------------------------------------------------------------------
+// --- The roads ------------------------------------------------------------------
 
 /**
  * World `index`'s track: its stages bottom to top, each a slope with a flat SAFEZONE
@@ -292,7 +292,7 @@ export function makeTrack(world, index) {
       : { stage: i, meter: length, end: Infinity, minX: -Infinity, maxX: Infinity, wins }
   })
   // The Wins orbs (see ORBS), bottom to top. `side` is -1 (left) or 1 (right); how far
-  // out is the client's to say, as it goes by the size of the stage's boulder.
+  // out is the client's to say, as it goes by the size of the stage's vehicle.
   const orbs = []
   stages.forEach((stage, i) => {
     const here = []
@@ -319,11 +319,11 @@ export function makeTrack(world, index) {
     stageAt,
     /** Whether metre `meter` is on a slope (not the plaza, a SAFEZONE or the summit). */
     isSlope: (meter) => meter > 0 && meter < length && meter > stageStart(stageAt(meter)),
-    /** Power stage `i`'s boulder takes for every metre it's pushed up. */
+    /** Power stage `i`'s vehicle takes for every metre it's pushed up. */
     powerPerMeter,
-    /** Power used pushing stage `i`'s boulder from the foot of its slope up to `meter`. */
+    /** Power used pushing stage `i`'s vehicle from the foot of its slope up to `meter`. */
     stageCost: (i, meter) => Math.min(stages[i].length, Math.max(0, meter - stageStart(i))) * powerPerMeter(i),
-    /** How far up stage `i` `power` pushes its boulder: the top, with at least the stage's need. */
+    /** How far up stage `i` `power` pushes its vehicle: the top, with at least the stage's need. */
     stageReach: (i, power) => stageStart(i) + Math.min(stages[i].length, Math.max(0, power) / powerPerMeter(i)),
     /** How many stages `muscle` climbs, one after the other (power is full again for each). */
     stagesCleared,

@@ -20,7 +20,7 @@ const POSE_HALF = 30
 const POSE_QUARTER = 60
 /** Top walking speed: full stride amplitude, as for your own character. */
 const MAX_SPEED = walkSpeed()
-/** Facing up the track, at the boulder. */
+/** Facing up the track, at the vehicle. */
 const UPHILL_YAW = Math.PI
 /** A lift's curl takes this long, as for your own character. */
 const CURL_MS = 380
@@ -31,7 +31,7 @@ const _up = new Vector3(0, 1, 0)
  * One other player as their real Bloxity avatar, dressed as they are, holding their
  * dumbbell and posed by the same playerPose as yours, from what the network says
  * they're doing: walking pace, curling in a Train Zone or after a lift, jumping - and up
- * the mountain, pushing their boulder (Boulders draws it) or walking a SAFEZONE.
+ * the mountain, pushing their vehicle (Vehicles draws it) or walking a SAFEZONE.
  */
 function RemoteAvatar({ sessionId, look }) {
   const groupRef = useRef(null)
@@ -76,7 +76,7 @@ function RemoteAvatar({ sessionId, look }) {
       return
     }
 
-    // Pushing: behind their boulder, up the track.
+    // Pushing: behind their vehicle, up the track.
     if (r.pushing) {
       group.visible = true
       group.position.copy(r.shownAt)

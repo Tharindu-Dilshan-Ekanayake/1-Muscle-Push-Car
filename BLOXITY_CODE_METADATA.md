@@ -1,9 +1,9 @@
 ---
-gameId: 1-muscle-to-push-boulder
+gameId: 1-muscle-push-car
 clientDir: client
 buildCommand: npm run build
 distDir: client/dist
-# Crushed by your boulder is a death: Boxity's death screen, and a Respawn button
+# Run over by your own vehicle rolling back is a death: Boxity's death screen, and a Respawn button
 # (back to the lobby) once its countdown is over.
 canDie: true
 # Leaderboards, declared by the client and scored by the server.
@@ -19,7 +19,7 @@ notApplicable:
   playWithFriends: Hosted on Boxity and joining through its matchmaker, so Boxity's own private rooms seat invited friends together; the game makes no private rooms of its own for CrazyGames' instant join.
 ---
 
-# +1 Muscle to Push Boulder on Boxity
+# +1 Muscle Push Car on Boxity
 
 Where each piece of the Boxity integration lives:
 

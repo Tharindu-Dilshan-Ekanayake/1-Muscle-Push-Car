@@ -37,7 +37,7 @@ export function upsertRemotePlayer(sessionId, state) {
       pets: [],
       walkPhase: 0,
       /**
-       * Up the mountain: whether they're there, pushing a boulder ('push') or walking a
+       * Up the mountain: whether they're there, pushing a vehicle ('push') or walking a
        * SAFEZONE ('free'), where they've reported, and where they're drawn (eased towards
        * it), across too; `pushStage` is the stage they're on.
        */
@@ -47,7 +47,7 @@ export function upsertRemotePlayer(sessionId, state) {
       pushX: 0,
       shownMeter: 0,
       shownX: 0,
-      roll: 0,
+      rolled: 0,
       /** Walking a SAFEZONE: which way they face, and how fast they go. */
       climbYaw: Math.PI,
       climbSpeed: 0,

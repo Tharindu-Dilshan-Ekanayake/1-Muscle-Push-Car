@@ -24,8 +24,8 @@ const roundButton = (size, background) => ({
 
 /**
  * On-screen controls for touch devices: a floating joystick that appears wherever the
- * left side of the screen is touched (pushing a boulder, it pushes and steers), a big
- * LIFT button and a jump button (at a boulder, LIFT gives way to the prompt's PUSH
+ * left side of the screen is touched (pushing a vehicle, it pushes and steers), a big
+ * LIFT button and a jump button (at a vehicle, LIFT gives way to the prompt's PUSH
  * button, held to take it). Everything else is walking up to things - a Train Zone, a
  * pad - or tapping their prompt.
  *
@@ -34,9 +34,9 @@ const roundButton = (size, background) => ({
  */
 export function TouchControls() {
   const [isTouch, setIsTouch] = useState(detectTouch)
-  const pushingBoulder = useGame((s) => s.climb === 'push')
-  // At a boulder LIFT makes way for the prompt's PUSH button, in the same spot.
-  const atBoulder = useGame((s) => s.zone.pushZone || s.zone.climbBoulder >= 0)
+  const pushingVehicle = useGame((s) => s.climb === 'push')
+  // At a vehicle LIFT makes way for the prompt's PUSH button, in the same spot.
+  const atVehicle = useGame((s) => s.zone.pushZone || s.zone.climbVehicle >= 0)
   const ready = useGame((s) => s.playable)
   const baseRef = useRef(null)
   const knobRef = useRef(null)
@@ -137,7 +137,7 @@ export function TouchControls() {
         </div>
       </div>
 
-      {ready && !pushingBoulder && !atBoulder && (
+      {ready && !pushingVehicle && !atVehicle && (
         <button
           type="button"
           aria-label="Lift"

@@ -1,14 +1,14 @@
 import { stageAt } from './course'
 
-import { boulderRadius, feetPoint } from './path'
+import { feetPoint } from './path'
 
 let frameKey = -1
 
 /**
- * Eases everyone up the mountain towards where they last reported: turning the boulder
+ * Eases everyone up the mountain towards where they last reported: rolling the wheels
  * of those pushing one, and facing those walking a SAFEZONE the way they're going.
  * Idempotent per frame (keyed on the renderer's clock), so the figures, the avatars and
- * the boulders all see exactly the same state however many of them ask. Each remote's
+ * the vehicles all see exactly the same state however many of them ask. Each remote's
  * `shownAt` is where to draw their feet.
  */
 export function stepRemotePushers(players, clockTime, delta) {
@@ -28,7 +28,7 @@ export function stepRemotePushers(players, clockTime, delta) {
     r.climbSpeed = Math.hypot(along, across) / Math.max(delta, 1e-3)
     // Up the track is north (-z).
     if (Math.abs(along) + Math.abs(across) > 1e-3) r.climbYaw = Math.atan2(across, -along)
-    if (r.pushPhase === 'push') r.roll += along / boulderRadius(r.pushStage)
+    if (r.pushPhase === 'push') r.rolled += along
     feetPoint(r.shownMeter, r.shownX, r.shownAt)
   }
 }

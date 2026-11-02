@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
 import { BufferAttribute, BufferGeometry, Color, Points, PointsMaterial, Vector3 } from 'three'
 
-import { WIN_PAD } from '@shared/balance'
+import { vehicleOf, WIN_PAD } from '@shared/balance'
 import { formatNumber } from '@shared/format'
 import { mulberry32 } from '@shared/rng'
 
@@ -13,7 +13,7 @@ import { sharedMaterials } from '../materials'
 import { FOG, SKY } from '../sceneStyle'
 import { skyUniforms } from '../skyState'
 import { safeStart, STAGES, stageAt, stageStart, TRACK_LENGTH, WIN_PADS, WORLD } from './course'
-import { boulderRadius, surfaceY, zAt } from './path'
+import { surfaceY, vehicleSize, zAt } from './path'
 import PadTrophies from './PadTrophies'
 import PushFX from './PushFX'
 import { push } from './pushControl'
@@ -119,7 +119,7 @@ export default function Push() {
     }
   }, [gl, camera, scene])
 
-  // As in the reference: a big SAFEZONE floating over each SAFEZONE, the next boulder's
+  // As in the reference: a big SAFEZONE floating over each SAFEZONE, the next vehicle's
   // name over it where it waits (the first stage's is the lobby's), the WINS over each
   // pad, and THE TOP: their own small label batch.
   useEffect(() => {
@@ -130,12 +130,12 @@ export default function Push() {
       const entrance = zAt(safeStart(i) + 1)
       batch.add(`safe-${stage.id}`, [0, surfaceY(entrance, 0) + 5.6, entrance], { lines: [{ text: 'SAFEZONE', size: 64, fill: '#ffffff' }], pxPerUnit: 62 }, { fade: 260, near: 16 })
       const lines = [
-        { text: stage.boulder, size: 50, gradient: STAGE_THEMES[stage.id].name },
+        { text: vehicleOf(stage).name, size: 50, gradient: STAGE_THEMES[stage.id].name },
         { text: `${formatNumber(stage.need)} Recommended`, size: 40, icon: 'muscle', gradient: ['#fffaa8', '#ffd52a', '#ff9c00'] },
       ]
       const z = zAt(stageStart(i) - 0.5)
-      // Just over the boulder: in view from the SAFEZONE, clear of the HUD above.
-      batch.add(`stage-${stage.id}`, [0, surfaceY(z, 0) + boulderRadius(i) * 2 + 1.2, z], { lines, pxPerUnit: 64 }, { fade: 200 })
+      // Just over the vehicle: in view from the SAFEZONE, clear of the HUD above.
+      batch.add(`stage-${stage.id}`, [0, surfaceY(z, 0) + vehicleSize(i).height + 1.6, z], { lines, pxPerUnit: 64 }, { fade: 200 })
     })
     for (const pad of WIN_PADS) {
       if (pad.stage === STAGES.length - 1) continue
@@ -144,7 +144,7 @@ export default function Push() {
         { text: 'WINS', size: 56, gradient: ['#fffaa8', '#ffd52a', '#ff9c00'] },
         { text: `+${formatNumber(pad.wins)}`, size: 64, icon: 'trophy', fill: '#ffffff' },
       ]
-      // Over its pad and the trophy spinning there, under the next boulder's sign beyond.
+      // Over its pad and the trophy spinning there, under the next vehicle's sign beyond.
       batch.add(`wins-${pad.stage}`, [(WIN_PAD.minX + WIN_PAD.maxX) / 2, surfaceY(z, 0) + 2.75, z], { lines, pxPerUnit: 86 }, { fade: 160 })
     }
     const top = zAt(TRACK_LENGTH + SUMMIT_LENGTH * 0.62)
@@ -174,7 +174,7 @@ export default function Push() {
       let built = 0
       for (let i = want.first; i <= want.last && built < MAX_BUILDS_PER_PASS; i += 1) {
         if (chunkCache.has(i)) continue
-        const mesh = buildChunk(i, { density: want.density }).build(sharedMaterials().blocks)
+        const mesh = buildChunk(i, { density: want.density }).build(sharedMaterials().roads)
         mesh.receiveShadow = want.shadows
         chunkCache.set(i, mesh)
         group.add(mesh)

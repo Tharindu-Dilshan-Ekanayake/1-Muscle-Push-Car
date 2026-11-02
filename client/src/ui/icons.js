@@ -148,14 +148,17 @@ const dumbbell = svg(
     ]),
 )
 
-/** A big grey boulder with cracks and a highlight. */
-const boulder = svg(
-  `<path d="M14 62c-4-20 8-42 30-48 22-6 42 6 44 28 2 18-6 36-26 42-20 6-44-2-48-22z" fill="url(#bo-g)" stroke="${OUT}" stroke-width="6" stroke-linejoin="round"/>
-  <path d="M40 30l8 12-6 10M66 52l-10 6 4 12M28 62l10-2" fill="none" stroke="#4a4f58" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M28 34c6-8 14-12 22-12" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".5"/>`,
-  vgrad('bo-g', [
-    [0, '#b6bcc6'],
-    [1, '#6d737e'],
+/** A chunky red car side-on: blue windows, a shine along its roof, black wheels with silver hubs. */
+const car = svg(
+  `<path d="M8 66V52c0-5 3-8 8-9l12-2 10-13c2-3 5-4 9-4h20c4 0 7 2 9 5l8 12 8 2c4 1 6 4 6 8v15z" fill="url(#ca-g)" stroke="${OUT}" stroke-width="6" stroke-linejoin="round"/>
+  <path d="M34 42l7-10c1-2 3-2 5-2h7v12zM60 30h7c2 0 3 1 4 2l7 10H60z" fill="#7fd0ff" stroke="${OUT}" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M42 26h26" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+  <rect x="84" y="51" width="8" height="6" rx="2" fill="#fff3a8" stroke="${OUT}" stroke-width="3"/>
+  <circle cx="28" cy="68" r="11" fill="#2a2c31" stroke="${OUT}" stroke-width="5"/><circle cx="28" cy="68" r="4.5" fill="#d4d8de"/>
+  <circle cx="74" cy="68" r="11" fill="#2a2c31" stroke="${OUT}" stroke-width="5"/><circle cx="74" cy="68" r="4.5" fill="#d4d8de"/>`,
+  vgrad('ca-g', [
+    [0, '#ff6a5c'],
+    [1, '#c81e1e'],
   ]),
 )
 
@@ -322,7 +325,7 @@ export const ICON_SVGS = {
   calendar,
   star,
   dumbbell,
-  boulder,
+  car,
   gift,
   gear,
   home,

@@ -17,15 +17,15 @@ import {
 import { sfx } from '../audio/sfx'
 import { actions } from '../net/actions'
 import { getGame, useGame } from '../store/game'
-import { portalLabelSpec, startBoulderLabelSpec, zoneLabelSpec } from './labels/lobbyLabels'
+import { portalLabelSpec, startVehicleLabelSpec, zoneLabelSpec } from './labels/lobbyLabels'
 import { updateWorldLabel } from './labels/registry'
 import { setWorld } from './push/course'
-import { atNextBoulder, push } from './push/pushControl'
+import { atNextVehicle, push } from './push/pushControl'
 import { runtime } from './runtime'
 
 const TICK_MS = 100
 
-const ZONE_KEYS = ['trainZone', 'trainZoneNear', 'sphinx', 'pushZone', 'pad', 'egg', 'portal', 'freeReward', 'auras', 'potions', 'climbBoulder']
+const ZONE_KEYS = ['trainZone', 'trainZoneNear', 'sphinx', 'pushZone', 'pad', 'egg', 'portal', 'freeReward', 'auras', 'potions', 'climbVehicle']
 /** Up the mountain, none of the plaza's spots count (you're still standing on the push zone there). */
 const MOUNTAIN = { trainZone: -1, trainZoneNear: -1, sphinx: false, pushZone: false, pad: -1, egg: null, portal: null, freeReward: false, auras: false, potions: false }
 const sameZone = (a, b) => ZONE_KEYS.every((key) => a[key] === b[key])
@@ -44,7 +44,7 @@ function syncZones(profile) {
 /** Climbs the track of the world you're in, and puts that world's signs up in the lobby. */
 function syncWorld(world) {
   setWorld(world)
-  updateWorldLabel('start-boulder', startBoulderLabelSpec())
+  updateWorldLabel('start-vehicle', startVehicleLabelSpec())
   for (const portal of PORTALS) updateWorldLabel(`portal-${portal.id}`, portalLabelSpec(portal.id, world))
 }
 
@@ -82,7 +82,7 @@ export function startGameTicker() {
     const p = runtime.player.position
     const egg = eggStandNear(p.x, p.z)
     const zone = push.active
-      ? { ...MOUNTAIN, climbBoulder: atNextBoulder() ? push.stage : -1 }
+      ? { ...MOUNTAIN, climbVehicle: atNextVehicle() ? push.stage : -1 }
       : {
           // Training is sitting on a Train Zone's bench.
           trainZone: runtime.player.bench,
@@ -96,7 +96,7 @@ export function startGameTicker() {
           freeReward: Math.hypot(p.x - FREE_REWARD.x, p.z - FREE_REWARD.z) < FREE_REWARD.radius,
           auras: near(AURA_STAND, p),
           potions: near(POTION_STAND, p),
-          climbBoulder: -1,
+          climbVehicle: -1,
         }
     if (!sameZone(zone, game.zone)) {
       if (zone.portal && zone.portal !== game.zone.portal) actions.portal()

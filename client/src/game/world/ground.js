@@ -19,22 +19,22 @@ import {
   PUSH_ZONE,
   SHOP,
   TRACK_START_Z,
-  WATERFALL,
   ZONE_COUNT,
   zoneDeckRect,
 } from '@shared/world'
 
+import { STYLE } from '../materials'
 import { PALETTE } from '../sceneStyle'
-import { DIRT_PATCHES, LAWNS } from './lawns'
+import { TOWN_DEPTH } from './terrain'
 
 /**
- * The plaza floor: one big plane whose colours come from a tiny "ground map" texture
- * painted at one texel per world unit. Paths, aprons and pads are rectangles painted
- * into it, so their edges always fall on the stud-tile seams, and the whole floor is a
- * single draw call regardless of how many painted regions it has.
+ * The town's floor: one big plane of cobbles (the toy shader's COBBLE) whose colours
+ * come from a tiny "ground map" texture painted at one texel per world unit: the square,
+ * Main Street round the fountain, the pavements, the aprons under the gyms and stands.
+ * The whole floor is a single draw call however many painted regions it has.
  */
 
-const MAP = { minX: PLAZA.minX - 10, maxX: PLAZA.maxX + 10, minZ: PLAZA.minZ, maxZ: PLAZA.maxZ + 8 }
+const MAP = { minX: PLAZA.minX - TOWN_DEPTH, maxX: PLAZA.maxX + TOWN_DEPTH, minZ: PLAZA.minZ, maxZ: PLAZA.maxZ + TOWN_DEPTH }
 const MAP_W = MAP.maxX - MAP.minX
 const MAP_H = MAP.maxZ - MAP.minZ
 
@@ -75,11 +75,13 @@ export function createGroundMap(maxTexture) {
   const ctx = canvas.getContext('2d')
   const { rect, bordered, disc } = painter(ctx)
 
-  rect(MAP, PALETTE.plaza)
-
-  // The lawns and their dirt patches, a darker edge where each meets its kerb.
-  for (const lawn of LAWNS) bordered(lawn, PALETTE.lawn, PALETTE.curbEdge)
-  for (const patch of DIRT_PATCHES) rect(patch, PALETTE.dirt)
+  // The town's streets round the square, then the square, then Main Street straight up
+  // its middle from the eggs to the road.
+  rect(MAP, PALETTE.street)
+  bordered({ minX: PLAZA.minX - 3, maxX: PLAZA.maxX + 3, minZ: PLAZA.minZ, maxZ: PLAZA.maxZ + 3 }, PALETTE.pavement, PALETTE.apronEdge)
+  rect(PLAZA, PALETTE.plaza)
+  rect({ minX: -4.5, maxX: 4.5, minZ: PLAZA.minZ, maxZ: PLAZA.maxZ }, PALETTE.street)
+  for (const side of [-1, 1]) rect({ minX: side * 4.5 - 0.5, maxX: side * 4.5 + 0.5, minZ: PLAZA.minZ, maxZ: PLAZA.maxZ }, PALETTE.apronEdge)
 
   // A paved apron under the Train Zones, and one at the foot of the track.
   const first = zoneDeckRect(0)
@@ -89,7 +91,7 @@ export function createGroundMap(maxTexture) {
 
   // Egg plaza and the shop yard.
   const eggsZ = EGG_STANDS[0].z
-  bordered({ minX: -18, maxX: 27, minZ: eggsZ - 4, maxZ: LEADERBOARDS[0].z - 1 }, PALETTE.apron, PALETTE.apronEdge)
+  bordered({ minX: -17, maxX: 25, minZ: eggsZ - 4, maxZ: LEADERBOARDS[0].z - 1 }, PALETTE.apron, PALETTE.apronEdge)
   rect({ minX: SHOP.minX, maxX: SHOP.maxX, minZ: SHOP.minZ, maxZ: SHOP.maxZ }, PALETTE.shopFloor)
 
   for (const p of PORTALS) {
@@ -97,13 +99,11 @@ export function createGroundMap(maxTexture) {
     disc(p.x, p.z, 5, PALETTE.apron)
   }
   for (const stand of [AURA_STAND, POTION_STAND]) {
-    disc(stand.x, stand.z, 5, PALETTE.apronEdge)
-    disc(stand.x, stand.z, 4, PALETTE.apron)
+    disc(stand.x, stand.z, 4, PALETTE.apronEdge)
+    disc(stand.x, stand.z, 3.3, PALETTE.apron)
   }
   disc(FREE_REWARD.x, FREE_REWARD.z, 4, PALETTE.apronEdge)
 
-  // Waterfall pool at the foot of the north cliff.
-  rect({ minX: WATERFALL.x - 6, maxX: WATERFALL.x + 6, minZ: WATERFALL.z, maxZ: WATERFALL.z + 5 }, PALETTE.water)
 
   const texture = new CanvasTexture(canvas)
   texture.colorSpace = SRGBColorSpace
@@ -136,6 +136,6 @@ export function createGroundGeometry() {
     uv.setXY(i, (x - MAP.minX) / MAP_W, 1 - (z - MAP.minZ) / MAP_H)
   }
   uv.needsUpdate = true
-  geometry.setAttribute('aStyle', new BufferAttribute(new Float32Array(position.count), 1))
+  geometry.setAttribute('aStyle', new BufferAttribute(new Float32Array(position.count).fill(STYLE.COBBLE), 1))
   return geometry
 }

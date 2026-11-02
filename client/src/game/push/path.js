@@ -1,12 +1,12 @@
 import { Vector3 } from 'three'
 
-import { SAFE_LENGTH } from '@shared/balance'
-import { SLOPE_ANGLE, TRACK_START_Z } from '@shared/world'
+import { SAFE_LENGTH, vehicleOf } from '@shared/balance'
+import { SLOPE_ANGLE, TRACK_HALF_WIDTH, TRACK_START_Z } from '@shared/world'
 
-import { isSlope, MAX_STAGES, SLOPES_BELOW, STAGES, stageAt, stageStart, TRACK_LENGTH } from './course'
+import { isSlope, SLOPES_BELOW, STAGES, stageAt, stageStart, TRACK_LENGTH } from './course'
 
 /**
- * Geometry of the boulder track of the world you're in (see course.js): it climbs
+ * Geometry of the road of the world you're in (see course.js): it climbs
  * north from the plaza's edge, each stage a
  * straight slope, with a flat SAFEZONE between one stage and the next and a flat summit
  * at THE TOP.
@@ -66,7 +66,7 @@ function slopeWeight(m, j) {
   return clamp01((m - s + BEND) / (2 * BEND)) * clamp01((s + STAGES[j].length - m + BEND) / (2 * BEND))
 }
 
-/** The tilt something riding the track at metre m takes, eased round the bends so a boulder never jumps. */
+/** The tilt something riding the track at metre m takes, eased round the bends so a vehicle never jumps. */
 export function tiltAt(m) {
   if (m <= -BEND) return 0
   const i = stageAt(m)
@@ -83,7 +83,7 @@ export function surfaceY(z, h) {
 
 /**
  * World point at track metre m, `x` to the side and `h` off the floor along its normal
- * (so a boulder sits on it, and leans back on a slope).
+ * (so something sits on it, and leans back on a slope).
  */
 export function trackPoint(m, x, h, out) {
   const t = tiltAt(m)
@@ -106,13 +106,30 @@ export function slopeBoxPlacement(m, x, h) {
   return [_p.x, _p.y, _p.z, t]
 }
 
-// --- Boulders ----------------------------------------------------------------------
+// --- Vehicles ----------------------------------------------------------------------
 
+const clampStage = (stage) => Math.max(0, Math.min(STAGES.length - 1, stage))
+/** The VEHICLES footprint (length, width, height) of stage `stage`'s vehicle. */
+export const vehicleSize = (stage) => vehicleOf(STAGES[clampStage(stage)])
+/** Stage `stage`'s vehicle's model id (its look, wheels and smoke: see vehicleModels.js). */
+export const vehicleModelId = (stage) => STAGES[clampStage(stage)].vehicle
+/** From a pusher's feet to the middle of their vehicle, along the track: half its length and a little. */
+export const vehicleGap = (stage) => vehicleSize(stage).length / 2 + 0.55
+/** How far across the track the middle of stage `stage`'s vehicle may go: clear of the lamp posts. */
+export const vehicleMaxX = (stage) => Math.max(0.3, TRACK_HALF_WIDTH - vehicleSize(stage).width / 2 - 0.75)
+
+const _rear = new Vector3()
+const _front = new Vector3()
 /**
- * Each stage's boulder is a little bigger than the last (the first is START_BOULDER's),
- * up to 0.85 bigger on the last stage, so even the biggest fits the track.
+ * Where a vehicle stands with its middle at track metre m, x across: its back and front
+ * wheels both on the floor (`rear` and `front` metres from its middle), so it tips up as
+ * it climbs onto a slope and levels off over the top. Sets `out` to the point on the
+ * floor under its middle, and returns its pitch (radians, nose up).
  */
-const BOULDER_RADII = Array.from({ length: MAX_STAGES }, (_, i) => 1.5 + (i * 0.85) / Math.max(1, MAX_STAGES - 1))
-export const boulderRadius = (stage) => BOULDER_RADII[Math.max(0, Math.min(BOULDER_RADII.length - 1, stage))]
-/** From a pusher's feet to the middle of their boulder, along the track. */
-export const boulderGap = (stage) => boulderRadius(stage) + 0.55
+export function vehiclePose(m, x, rear, front, out) {
+  feetPoint(m + rear, x, _rear)
+  feetPoint(m + front, x, _front)
+  _front.sub(_rear).normalize()
+  out.copy(_rear).addScaledVector(_front, -rear)
+  return Math.atan2(_front.y, -_front.z)
+}

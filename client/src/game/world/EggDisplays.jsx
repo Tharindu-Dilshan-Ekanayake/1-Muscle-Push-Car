@@ -13,7 +13,7 @@ import {
 
 import { EGG_STANDS } from '@shared/world'
 
-import { getQuality } from '../../store/quality'
+import { getQuality, useQuality } from '../../store/quality'
 import { EGG_COLORS } from '../../ui/icons'
 import { createGlowInstances, disposeGlow, glowTime } from '../glow'
 import { eggHeight } from './eggs'
@@ -162,7 +162,9 @@ export function EggDisplays() {
 
   const assets = useMemo(() => {
     const count = EGG_STANDS.length
-    const geometry = new SphereGeometry(1, 28, 20)
+    // Smooth shells; a third the triangles on LOW, where they're small on a small screen.
+    const low = useQuality.getState().level === 'LOW'
+    const geometry = low ? new SphereGeometry(1, 16, 12) : new SphereGeometry(1, 28, 20)
     const spot = new InstancedBufferAttribute(new Float32Array(count * 3), 3)
     const dark = new InstancedBufferAttribute(new Float32Array(count * 3), 3)
     const pattern = new InstancedBufferAttribute(new Float32Array(count), 1)

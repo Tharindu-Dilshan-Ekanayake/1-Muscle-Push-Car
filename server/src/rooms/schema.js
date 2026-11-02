@@ -31,7 +31,7 @@ export const PlayerState = schema(
     petIds: t.array('string'),
     /**
      * Up the mountain: where along the track they are (NOT_PUSHING in the plaza), how far
-     * across, and whether they're pushing a boulder ('push') or walking a SAFEZONE ('free').
+     * across, and whether they're pushing a vehicle ('push') or walking a SAFEZONE ('free').
      */
     pushMeter: t.float32(),
     pushX: t.float32(),

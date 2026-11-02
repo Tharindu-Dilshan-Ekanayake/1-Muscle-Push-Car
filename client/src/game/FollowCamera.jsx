@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber'
 import { useEffect, useRef } from 'react'
 import { Vector3 } from 'three'
 
-import { feetPoint } from './push/path'
+import { feetPoint, vehicleSize } from './push/path'
 import { push } from './push/pushControl'
 import { runtime } from './runtime'
 
@@ -32,8 +32,9 @@ const _lookAt = new Vector3()
 
 /** Up the track: how far behind and above the pusher the chase camera rides. */
 const CHASE_BEHIND = 7.5
-const CHASE_HEIGHT = 4.6
-/** It looks this far ahead of the pusher, over the boulder, up the track. */
+/** High enough to see a small car over the pusher's shoulders. */
+const CHASE_HEIGHT = 5.4
+/** It looks this far ahead of the pusher, over the vehicle, up the track. */
 const CHASE_AHEAD = 5
 const CHASE_LOOK_HEIGHT = 2
 const CHASE_SMOOTHING = 6
@@ -45,8 +46,8 @@ const smoothstep = (a, b, x) => {
 
 /**
  * Where the chase camera wants to be while pushing, and what it looks at: behind and
- * above you looking up the track over the boulder; pulled back and swung aside when it
- * crushes you; swung out to your side at the top, onto you cheering by your boulder
+ * above you looking up the track over the vehicle; pulled back and swung aside when it
+ * crushes you; swung out to your side at the top, onto you cheering by your vehicle
  * with THE TOP's trophy beyond.
  */
 function chaseTarget(out, look) {
@@ -61,10 +62,12 @@ function chaseTarget(out, look) {
     return
   }
   const crushed = push.phase === 'crushed' ? smoothstep(0, 0.8, (performance.now() - push.endedAt) / 1000) : 0
-  feetPoint(m - CHASE_BEHIND - 4 * crushed, x * 0.5 + 2.5 * crushed, out)
-  out.y += CHASE_HEIGHT + 2.5 * crushed
-  feetPoint(m + CHASE_AHEAD * (1 - crushed), x * 0.7, look)
-  look.y += CHASE_LOOK_HEIGHT * (1 - crushed) + 0.6 * crushed
+  // Behind a bus or a truck it rides higher and further back, to see the road over it.
+  const tall = Math.max(0, vehicleSize(push.stage).height - 2.4)
+  feetPoint(m - CHASE_BEHIND - tall * 1.2 - 4 * crushed, x * 0.5 + 2.5 * crushed, out)
+  out.y += CHASE_HEIGHT + tall * 1.1 + 2.5 * crushed
+  feetPoint(m + (CHASE_AHEAD + tall * 0.8) * (1 - crushed), x * 0.7, look)
+  look.y += (CHASE_LOOK_HEIGHT + tall * 0.7) * (1 - crushed) + 0.6 * crushed
 }
 
 /**

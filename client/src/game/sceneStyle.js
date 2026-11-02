@@ -1,7 +1,7 @@
 /**
  * The scene's whole look in one place: a bright toy-brick world with a saturated blue
- * sky, a light-blue studded baseplate with lime lawns and orange dirt patches, grey
- * voxel mountains all round and terracotta cliffs either side of the boulder track.
+ * sky, an old town square of warm cobbles with brick-walled gardens, old houses round
+ * it, grey voxel mountains behind and terracotta cliffs either side of the road.
  *
  * Colours are sRGB hex, exactly as you would pick them in an image editor.
  *
@@ -33,16 +33,19 @@ export const CLOUDS = {
 
 /** Every surface colour in the lobby. */
 export const PALETTE = {
-  /** The baseplate: light blue studs, as in the reference. */
-  plaza: '#a4cdee',
-  /** Raised kerbs round the lawns, and the darker edge painted along them. */
-  curb: '#c3d8ec',
-  curbEdge: '#8fb4d8',
-  lawn: '#62e23d',
-  dirt: '#f59a4f',
-  apron: '#d7e4f0',
-  apronEdge: '#eef5fb',
-  shopFloor: '#aab4bf',
+  /** The square's cobbles, warm sandstone. */
+  plaza: '#dccaa4',
+  /** Main Street's darker cobbles, and the pavements round the square's edge. */
+  street: '#9c9184',
+  pavement: '#c8b898',
+  /** The gardens' low brick walls, and their grass. */
+  curb: '#b4644a',
+  curbEdge: '#a89878',
+  lawn: '#5cc044',
+  /** Paved aprons under the gyms, the push zone and the eggs, and their edging. */
+  apron: '#e6d8b8',
+  apronEdge: '#b8a684',
+  shopFloor: '#c4b496',
   /** Grey voxel mountains, and the terracotta cliffs either side of the track. */
   rock: ['#9a9fa6', '#8a8f96', '#a9adb2'],
   cliff: '#c4774a',

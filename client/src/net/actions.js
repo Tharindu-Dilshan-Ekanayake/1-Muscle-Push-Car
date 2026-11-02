@@ -26,7 +26,7 @@ export const actions = {
   /** Where you've got to up the track (a few times a second while pushing). */
   pushAt: (meter, x) => send('pushAt', { meter, x }),
   endPush: (reason) => send('endPush', { reason }),
-  /** The boulder rolled into Wins orb `index`. */
+  /** The vehicle rolled into Wins orb `index`. */
   collectOrb: (index) => send('collectOrb', { index }),
   /** A Boxity emote started ('' when it stops), so the room sees it. */
   emote: (id) => send('emote', { id }),

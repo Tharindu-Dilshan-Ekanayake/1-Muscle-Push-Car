@@ -16,14 +16,15 @@ import { burst } from '../fx/fxQueue'
 import { spawnPopup } from '../fx/popups'
 import { runtime } from '../runtime'
 import { isSlope, ORBS_ON, safeStart, STAGES, stageCost, stageStart, stageTop, TRACK_LENGTH, WIN_PADS } from './course'
-import { boulderGap, boulderRadius, feetPoint, floorY, meterAtZ, trackPoint, zAt } from './path'
+import { feetPoint, floorY, meterAtZ, trackPoint, vehicleGap, vehicleMaxX, vehicleModelId, vehiclePose, vehicleSize, zAt } from './path'
+import { wheelbase } from './vehicleModels'
 
 /** Position reports to the authority while on the mountain, and at least this often while resting. */
 const REPORT_MS = 200
 const KEEPALIVE_MS = 5000
 /** Sideways steering speed, m/s. */
 const STEER_SPEED = 5.5
-/** Let go of the boulder this long and it starts rolling back. */
+/** Let go of the vehicle this long and it starts rolling back. */
 const LET_GO = 0.35
 /** How long THE TOP's celebration plays before you're back down. */
 const TOP_HOLD_MS = 3800
@@ -31,7 +32,7 @@ const TOP_HOLD_MS = 3800
 const WIN_HOLD_MS = 700
 /** Back in the lobby after cashing in: this long into the dance, the Wins start flying home. */
 const FLY_HOME_MS = 550
-/** The boulder rolls back over you in this long. */
+/** The vehicle rolls back over you in this long. */
 const CRUSH_ROLL_MS = 520
 /** The last of your power, as a share of what you started with: you strain, the counter goes red. */
 export const LOW_POWER = 0.15
@@ -40,16 +41,16 @@ const SAFE_X = TRACK_HALF_WIDTH - 1
 
 /**
  * The climb in progress, read every frame by the player, the camera, the track, the
- * boulders and their effects. It alternates between pushing a stage's boulder up its
+ * vehicles and their effects. It alternates between pushing a stage's vehicle up its
  * slope ('push') and walking about the flat SAFEZONE above without one ('free'), until
  * you're crushed, cash in, reach THE TOP or go back to the Lobby.
  *
  * Each push is its own: the authority tells us its power (your Muscle when you took the
- * boulder) and how far that gets it. Hold forward to push, let go and it rolls back down
- * the slope; every half metre takes a power (more on the heavier boulders past the
- * third). The moment the power's gone, the boulder rolls back over you - and you're
+ * vehicle) and how far that gets it. Hold forward to push, let go and it rolls back down
+ * the slope; every half metre takes a power (more on the heavier vehicles past the
+ * third). The moment the power's gone, the vehicle rolls back over you - and you're
  * back in the Lobby, whatever stage it was on. Over the top,
- * the boulder's done with and you're free in the SAFEZONE, with full power for the next.
+ * the vehicle's done with and you're free in the SAFEZONE, with full power for the next.
  *
  * Your logical position stays on the PUSH ZONE in the plaza throughout (that's what the
  * server checks of it); only what's drawn goes up the mountain, and where that is we
@@ -60,13 +61,18 @@ export const push = {
   /** 'push' | 'free' (in a SAFEZONE) | 'crushed' (out of power: it rolled back over you) | 'top' (you made it!) */
   phase: 'push',
   startedAt: 0,
-  /** The power this push started with (your Muscle when you took the boulder), and the furthest metre it reaches. */
+  /** The power this push started with (your Muscle when you took the vehicle), and the furthest metre it reaches. */
   power: 0,
   reach: 0,
   /** Where this push started: just short of the foot of its slope. */
   start: PUSH_START,
   /** Where your feet are along the track, and across it. */
   meter: PUSH_START,
+  /**
+   * The furthest up this push has got. Power is spent getting there: rolling back down
+   * gives none back, and pushing up again is free until you pass it.
+   */
+  furthest: PUSH_START,
   x: 0,
   /** Metres a second along the track (+ is uphill). */
   speed: 0,
@@ -74,12 +80,14 @@ export const push = {
   effort: 0,
   /** 0-1: straining as the last of your power runs out. */
   strain: 0,
-  /** Pushing, the stage whose boulder it is; free, the stage the SAFEZONE leads up to. */
+  /** Pushing, the stage whose vehicle it is; free, the stage the SAFEZONE leads up to. */
   stage: 0,
-  /** The boulder's middle along the track, and how far it has turned. */
-  boulderMeter: 0,
-  roll: 0,
-  /** When the boulder rolled back over you, and how far through that (0-1). */
+  /** The vehicle's middle along the track, and how far its wheels have rolled (metres). */
+  vehicleMeter: 0,
+  rolled: 0,
+  /** How the vehicle's tipped (radians, nose up), its wheels on the floor. */
+  pitch: 0,
+  /** When the vehicle rolled back over you, and how far through that (0-1). */
   crushedAt: 0,
   crush: 0,
   /** When the push was decided: crushed, or THE TOP reached. */
@@ -91,9 +99,9 @@ export const push = {
   idle: 0,
   /** Set once we've told the authority it's over, so its echo isn't handled twice. */
   ending: false,
-  /** Where your feet are (walked about in a SAFEZONE), and the boulder's middle. */
+  /** Where your feet are (walked about in a SAFEZONE), and the floor under the vehicle's middle. */
   position: new Vector3(),
-  boulderPosition: new Vector3(),
+  vehiclePosition: new Vector3(),
 }
 
 let reportTimer = null
@@ -114,18 +122,20 @@ function clearTimers() {
 const showBanner = (banner) => setTimeout(() => getGame().showPushBanner(banner), 0)
 const setClimb = (climb) => setTimeout(() => getGame().setClimb(climb), 0)
 
-/** How far across the track a boulder of `stage` may go: clear of the SAFEZONE arches' posts. */
-const maxX = (stage) => TRACK_HALF_WIDTH - boulderRadius(stage) - 1.1
+/** How far across the track the vehicle of `stage` may go: clear of the lamp posts. */
+const maxX = vehicleMaxX
+/** How big the rumble of stage `stage`'s vehicle sounds (sfx.rollSet's size). */
+const soundSize = (stage) => 1.2 + vehicleSize(stage).length * 0.1
 
 /** How high a Wins orb floats over the track. */
 export const ORB_HEIGHT = 1.3
-/** How close across the track the boulder must come to an orb to take it: a share of its radius. */
-const ORB_REACH = 0.45
+/** How close across the track the vehicle's middle must come to an orb to take it: a share of its width. */
+const ORB_REACH = 0.3
 /**
  * How far across the track Wins orb `orb` floats: out on its side, past the middle of
- * the boulder steered all the way over - so it takes steering to, whatever its size.
+ * the vehicle steered all the way over - so it takes steering to, whatever its size.
  */
-export const orbX = (orb) => orb.side * (maxX(orb.stage) + boulderRadius(orb.stage) * 0.4)
+export const orbX = (orb) => orb.side * (maxX(orb.stage) + vehicleSize(orb.stage).width * 0.2)
 
 /**
  * Tells the authority where we've got to, when that's changed - and every few seconds
@@ -141,20 +151,24 @@ function report() {
   actions.pushAt(meter, x)
 }
 
-/** Places the pusher and the boulder from the push's numbers. */
+/** Places the pusher, and the vehicle on its wheels, tipped to the floor, from the push's numbers. */
 function place() {
   feetPoint(push.meter, push.x, push.position)
-  trackPoint(push.boulderMeter, push.x, boulderRadius(push.stage), push.boulderPosition)
-}
-
-/** Power left: pushing, what you took the boulder with less what the climb's taken; else your Muscle. */
-export function powerLeft() {
-  if (!push.active || push.phase === 'free') return getGame().profile.muscle
-  return Math.max(0, push.power - stageCost(push.stage, push.meter))
+  const [rear, front] = wheelbase(vehicleModelId(push.stage))
+  push.pitch = vehiclePose(push.vehicleMeter, push.x, rear, front, push.vehiclePosition)
 }
 
 /**
- * Takes the boulder the authority gave us: the first stage's from the plaza (a new
+ * Power left: pushing, what you took the vehicle with less what getting it as far as it's
+ * been has cost (never given back for rolling down again); else your Muscle.
+ */
+export function powerLeft() {
+  if (!push.active || push.phase === 'free') return getGame().profile.muscle
+  return Math.max(0, push.power - stageCost(push.stage, push.furthest))
+}
+
+/**
+ * Takes the vehicle the authority gave us: the first stage's from the plaza (a new
  * climb), or the next one's from a SAFEZONE.
  */
 export function beginPush({ stage = 0, reach, power, start, x }) {
@@ -170,18 +184,19 @@ export function beginPush({ stage = 0, reach, power, start, x }) {
     start,
     cashWins: 0,
     meter: start,
+    furthest: start,
     x: Math.max(-maxX(stage), Math.min(maxX(stage), x)),
     speed: 0,
     effort: 0,
     strain: 0,
-    roll: 0,
+    rolled: 0,
     crushedAt: 0,
     crush: 0,
     endedAt: 0,
     idle: 0,
     ending: false,
   })
-  push.boulderMeter = push.meter + boulderGap(stage)
+  push.vehicleMeter = push.meter + vehicleGap(stage)
   place()
   runtime.player.frozen = true
   runtime.camera.mode = 'push'
@@ -271,7 +286,7 @@ function freeAt(stage, meter) {
 
 /**
  * Walking in a SAFEZONE: keeps `pos` (your feet, which the player moves) on its floor,
- * between its arch and the next boulder, and works out where along the track that is.
+ * between its arch and the next vehicle, and works out where along the track that is.
  * Returns the floor's height.
  */
 export function walkSafezone(pos) {
@@ -285,8 +300,8 @@ export function walkSafezone(pos) {
   return floorY(lo)
 }
 
-/** Whether you're in a SAFEZONE close enough to the next boulder to take it (and not cashing in). */
-export const atNextBoulder = () =>
+/** Whether you're in a SAFEZONE close enough to the next vehicle to take it (and not cashing in). */
+export const atNextVehicle = () =>
   push.active && push.phase === 'free' && !push.ending && push.meter >= stageStart(push.stage) + PUSH_START - GRAB_REACH
 
 /**
@@ -299,16 +314,16 @@ export function advancePush(delta, { forward, back, side }) {
   const now = performance.now()
 
   if (push.phase === 'crushed') {
-    // The boulder rolls back down the slope, right over you.
+    // The vehicle rolls back down the slope, right over you.
     push.crush = Math.min(1, (now - push.crushedAt) / CRUSH_ROLL_MS)
-    const slip = push.crush * push.crush * (boulderGap(push.stage) + 3.5)
-    const before = push.boulderMeter
-    push.boulderMeter = push.meter + boulderGap(push.stage) - slip
-    push.roll += (push.boulderMeter - before) / boulderRadius(push.stage)
+    const slip = push.crush * push.crush * (vehicleGap(push.stage) + 3.5)
+    const before = push.vehicleMeter
+    push.vehicleMeter = push.meter + vehicleGap(push.stage) - slip
+    push.rolled += push.vehicleMeter - before
     push.speed = 0
     push.effort = 0
     place()
-    sfx.rollSet(push.crush < 1 ? 0.8 : 0, 0, boulderRadius(push.stage))
+    sfx.rollSet(push.crush < 1 ? 0.8 : 0, 0, soundSize(push.stage))
     return
   }
   if (push.phase === 'top') {
@@ -320,7 +335,7 @@ export function advancePush(delta, { forward, back, side }) {
   }
 
   // --- Pushing, letting go, steering ---------------------------------------------
-  // Let go on the slope and the boulder rolls back down it.
+  // Let go on the slope and the vehicle rolls back down it.
   const onSlope = isSlope(push.meter)
   let target = 0
   push.effort = forward
@@ -349,10 +364,11 @@ export function advancePush(delta, { forward, back, side }) {
     push.speed = Math.min(0, push.speed)
   }
   push.meter = meter
+  push.furthest = Math.max(push.furthest, meter)
   push.x = Math.max(-maxX(push.stage), Math.min(maxX(push.stage), push.x + side * STEER_SPEED * delta))
-  const before = push.boulderMeter
-  push.boulderMeter = push.meter + boulderGap(push.stage)
-  push.roll += (push.boulderMeter - before) / boulderRadius(push.stage)
+  const before = push.vehicleMeter
+  push.vehicleMeter = push.meter + vehicleGap(push.stage)
+  push.rolled += push.vehicleMeter - before
   place()
   collectOrbs()
 
@@ -369,10 +385,10 @@ export function advancePush(delta, { forward, back, side }) {
     }
     return
   }
-  // The last of your power, up a slope: you strain. None left, and the boulder wins.
+  // The last of your power, up a slope: you strain. None left, and the vehicle wins.
   const low = Math.max(1, push.power * LOW_POWER)
   push.strain = forward > 0.1 && onSlope ? Math.min(1, Math.max(0, 1 - powerLeft() / low)) : 0
-  sfx.rollSet(Math.abs(push.speed) / PUSH_SPEED, push.strain, boulderRadius(push.stage))
+  sfx.rollSet(Math.abs(push.speed) / PUSH_SPEED, push.strain, soundSize(push.stage))
   if (push.meter >= push.reach) crushed(now)
 }
 
@@ -380,14 +396,14 @@ const _orb = new Vector3()
 const TROPHY = iconUrl('trophy')
 
 /**
- * Wins orbs the boulder's rolling into: each taken once a climb (the authority pays it,
+ * Wins orbs the vehicle's rolling into: each taken once a climb (the authority pays it,
  * where we are told it first), with a pop of gold, a chime and the Wins rising off it.
  */
 function collectOrbs() {
-  const r = boulderRadius(push.stage)
+  const { length, width } = vehicleSize(push.stage)
   for (const orb of ORBS_ON[push.stage] ?? []) {
     if (push.orbsTaken.has(orb.index)) continue
-    if (Math.abs(orb.meter - push.boulderMeter) > r * 0.6 || Math.abs(orbX(orb) - push.x) > r * ORB_REACH) continue
+    if (Math.abs(orb.meter - push.vehicleMeter) > length / 2 || Math.abs(orbX(orb) - push.x) > width * ORB_REACH) continue
     push.orbsTaken.add(orb.index)
     report()
     actions.collectOrb(orb.index)
@@ -399,16 +415,16 @@ function collectOrbs() {
   }
 }
 
-/** Over the top of a slope: the boulder's done with, and you're free in the SAFEZONE above. */
+/** Over the top of a slope: the vehicle's done with, and you're free in the SAFEZONE above. */
 function overTheTop() {
-  const b = push.boulderPosition
-  burst({ x: b.x, y: b.y, z: b.z, count: 40, palette: 'gold', speed: 8 })
-  sfx.boulderPop()
+  const b = push.vehiclePosition
+  burst({ x: b.x, y: b.y + vehicleSize(push.stage).height * 0.6, z: b.z, count: 40, palette: 'gold', speed: 8 })
+  sfx.vehiclePop()
   sfx.rollStop()
   freeAt(push.stage + 1, stageTop(push.stage))
 }
 
-/** Out of power: the boulder rolls back over you, and you're back in the Lobby. */
+/** Out of power: the vehicle rolls back over you, and you're back in the Lobby. */
 function crushed(now) {
   push.phase = 'crushed'
   push.crushedAt = now
@@ -416,7 +432,7 @@ function crushed(now) {
   push.strain = 1
   sfx.crush()
   burst({ x: push.position.x, y: push.position.y + 0.6, z: push.position.z, count: 30, palette: 'confetti', speed: 6 })
-  // The climb's over: the authority hears now (everyone sees you gone from the boulder),
+  // The climb's over: the authority hears now (everyone sees you gone from the vehicle),
   // but you lie crushed until you respawn - from Boxity's death screen, back to the lobby.
   push.ending = true
   report()
@@ -449,7 +465,7 @@ export function resetCharacter() {
 }
 
 /**
- * Backed off the foot of a slope, letting go of the boulder: into the plaza from the
+ * Backed off the foot of a slope, letting go of the vehicle: into the plaza from the
  * first, free in the SAFEZONE from any other. (Finished on a timer from the first: this
  * is reached from the frame loop.)
  */

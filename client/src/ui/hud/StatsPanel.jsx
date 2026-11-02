@@ -49,7 +49,7 @@ function Boosts() {
 }
 
 /**
- * Your power while you push a boulder: counting down as you climb, going red as it runs
+ * Your power while you push a vehicle: counting down as you climb, going red as it runs
  * out. Written from the frame-rate push state by a timer, never by React.
  */
 function PowerRow() {
@@ -82,7 +82,7 @@ function PowerRow() {
 
 /**
  * Bottom-left, as in the reference: Wins, then Muscle, then (a little smaller) your
- * rebirths, with any running potions over them. While you push a boulder the Muscle is
+ * rebirths, with any running potions over them. While you push a vehicle the Muscle is
  * your power, counting down as you climb; it's full again when you get to a SAFEZONE.
  */
 export function StatsPanel() {
@@ -90,13 +90,13 @@ export function StatsPanel() {
   const wins = useGame((s) => s.winsShown ?? s.profile.wins)
   const muscle = useGame((s) => s.profile.muscle)
   const rebirths = useGame((s) => s.profile.rebirths)
-  const pushingBoulder = useGame((s) => s.climb === 'push')
+  const pushingVehicle = useGame((s) => s.climb === 'push')
 
   return (
     <div className="pointer-events-none absolute flex flex-col" style={{ left: u(20), bottom: u(120) }}>
       <Boosts />
       <StatRow icon="trophy" value={formatNumber(wins)} gradient={GRADIENTS.gold} flyTarget />
-      {pushingBoulder ? <PowerRow /> : <StatRow icon="muscle" value={formatNumber(muscle)} />}
+      {pushingVehicle ? <PowerRow /> : <StatRow icon="muscle" value={formatNumber(muscle)} />}
       <StatRow icon="rebirth" value={formatNumber(rebirths)} gradient={REBIRTH_GRADIENT} small />
     </div>
   )
