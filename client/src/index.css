@@ -12,6 +12,25 @@
   --px: clamp(0.42px, min(100vw / 1920, 100vh / 1080), 1.4px);
 }
 
+/*
+ * Phones get layouts of their own (ui/hud/layout.js, which uses these same queries), each
+ * with its unit sized so the buttons stay thumb-sized and everything fits: held sideways,
+ * a layout 720 units tall; held upright, one 820 units wide. dvh/dvw (the space the
+ * browser's own bars leave) where supported.
+ */
+@media (orientation: landscape) and (max-height: 560px) {
+  :root {
+    --px: min(100vh / 720, 100vw / 1500);
+    --px: min(100dvh / 720, 100dvw / 1500);
+  }
+}
+@media (orientation: portrait) and (max-width: 1000px) {
+  :root {
+    --px: min(100vw / 820, 100vh / 1350);
+    --px: min(100dvw / 820, 100dvh / 1350);
+  }
+}
+
 html,
 body,
 #root {
@@ -40,6 +59,11 @@ canvas {
   display: inline-block;
   font-family: 'Fredoka One', 'Arial Rounded MT Bold', system-ui, sans-serif;
   white-space: nowrap;
+}
+/* The same outlined text allowed to wrap onto several lines (phone hints): both layers wrap alike. */
+.pp-text-wrap {
+  display: block;
+  white-space: normal;
 }
 .pp-text-stroke {
   position: absolute;

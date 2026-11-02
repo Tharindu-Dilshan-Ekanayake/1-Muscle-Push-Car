@@ -349,6 +349,27 @@ export const EGG_COLORS = {
 const urlCache = new Map()
 
 /** `data:` URL for an icon name, `egg:<id>` for an egg or `aura:<id>` for an aura. */
+/**
+ * Decodes every HUD icon ahead of time, one per idle moment: the first time an SVG image
+ * is shown the browser parses it into a document of its own, which, for the handful a
+ * screen like the push HUD brings up at once, held up the frame it appeared in.
+ */
+const decoded = []
+export function preloadIcons() {
+  const names = [...Object.keys(ICON_SVGS), ...Object.keys(IMAGE_ICONS)]
+  const idle = (fn) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 50))
+  const next = () => {
+    const name = names.shift()
+    if (!name) return
+    const img = new Image()
+    img.src = iconUrl(name)
+    // Kept, so the decoded image stays in the cache for the HUD to reuse.
+    decoded.push(img)
+    ;(img.decode ? img.decode() : Promise.resolve()).catch(() => null).finally(() => idle(next))
+  }
+  idle(next)
+}
+
 export function iconUrl(name) {
   if (IMAGE_ICONS[name]) return IMAGE_ICONS[name]
   let url = urlCache.get(name)

@@ -4,6 +4,7 @@ import { formatNumber } from '@shared/format'
 import { useClearTop } from '../../bloxity/reserved'
 import { useGame } from '../../store/game'
 import StrokeText from '../StrokeText'
+import { pick, useHudLayout } from './layout'
 import { u } from './style'
 
 const BANNER_GRADIENT = 'linear-gradient(180deg, #fff6a8 0%, #ffd52a 45%, #ff9c00 100%)'
@@ -37,12 +38,23 @@ export function TopCenter() {
   const hint = useHint()
   const hidden = useGame((s) => s.pushing || s.panel !== null)
   const clear = useClearTop(0.25, 0.75)
+  const layout = useHudLayout()
   if (!hint) return null
+  // On a phone, in the clear middle of the screen - never over the buttons down either
+  // side - in smaller letters, wrapping onto a second line if it must.
+  const box = pick(layout, {
+    desktop: { top: `max(${u(196)}, ${clear + 8}px)`, size: 60 },
+    landscape: { top: '27%', size: 38, left: 'calc(50% + 20px)', width: '56vw' },
+    portrait: { top: '61%', size: 36, width: '84vw' },
+  })
 
   return (
-    <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 flex-col items-center" style={{ top: `max(${u(196)}, ${clear + 8}px)` }}>
-      <div key={hint.key} className="pp-pet" style={{ fontSize: u(60), animationPlayState: hidden ? 'paused' : 'running' }}>
-        <StrokeText stroke={u(12)} gradient={BANNER_GRADIENT}>
+    <div
+      className="pointer-events-none absolute flex -translate-x-1/2 flex-col items-center text-center"
+      style={{ top: box.top, left: box.left ?? '50%', width: box.width, lineHeight: 1.15 }}
+    >
+      <div key={hint.key} className="pp-pet" style={{ fontSize: u(box.size), animationPlayState: hidden ? 'paused' : 'running' }}>
+        <StrokeText stroke={u(layout === 'desktop' ? 12 : 9)} gradient={BANNER_GRADIENT} className={layout === 'desktop' ? '' : 'pp-text-wrap'}>
           {hint.text}
         </StrokeText>
       </div>

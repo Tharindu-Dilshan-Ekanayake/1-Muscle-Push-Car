@@ -6,6 +6,8 @@ import Icon from '../Icon'
 import StrokeText from '../StrokeText'
 import GiftTimer from './GiftTimer'
 import { Price } from './parts'
+import { useClearTop } from '../../bloxity/reserved'
+import { pick, useHudLayout } from './layout'
 import { GRADIENTS, u } from './style'
 
 /** X2 WINS only shows where there's room for it (it's in the Store too). */
@@ -73,10 +75,19 @@ const COLUMN_SCALE = 0.66
 /** Down the right-hand side, as in the reference: the FREE GIFT, then the x2 passes. */
 export function PassButtons() {
   const pushing = useGame((s) => s.pushing)
+  const layout = useHudLayout()
+  const clear = useClearTop(0.72, 1)
+  // On a phone, smaller still: it has to stop short of the LIFT button below it. Always
+  // under the top-right buttons (and Boxity's toolbar, where it reaches across).
+  const { top, scale } = pick(layout, {
+    desktop: { top: u(96), scale: COLUMN_SCALE },
+    landscape: { top: `calc(${u(86)} + ${clear}px)`, scale: 0.5 },
+    portrait: { top: `calc(${u(96)} + ${clear}px)`, scale: 0.5 },
+  })
   return (
     <div
       className="pointer-events-none absolute flex flex-col items-center"
-      style={{ right: u(20), top: u(96), gap: u(18), transform: `scale(${COLUMN_SCALE})`, transformOrigin: 'top right' }}
+      style={{ right: u(20), top, gap: u(18), transform: `scale(${scale})`, transformOrigin: 'top right' }}
     >
       <GiftTimer />
       <div className="flex flex-col items-center" style={{ gap: u(18), visibility: pushing ? 'hidden' : 'visible' }}>

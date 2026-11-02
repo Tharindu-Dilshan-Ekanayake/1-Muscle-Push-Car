@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { lift } from '../game/lift'
 import { runtime } from '../game/runtime'
 import { useGame } from '../store/game'
+import { PORTRAIT_ACTIONS_UP, useHudLayout } from './hud/layout'
 import { GRADIENTS } from './hud/style'
 import { iconUrl } from './icons'
 
@@ -41,6 +42,9 @@ export function TouchControls() {
   const baseRef = useRef(null)
   const knobRef = useRef(null)
   const active = useRef({ id: null, x: 0, y: 0 })
+  const layout = useHudLayout()
+  // Held upright the buttons and the joystick's area sit above the level bar and packs.
+  const up = layout === 'portrait' ? `calc(var(--px) * ${PORTRAIT_ACTIONS_UP})` : '0px'
 
   // A touchscreen laptop can start with a mouse; show the controls on first touch.
   useEffect(() => {
@@ -104,13 +108,14 @@ export function TouchControls() {
     runtime.input.joyX = 0
     runtime.input.joyY = 0
     if (knobRef.current) knobRef.current.style.transform = 'translate(0px, 0px)'
-    if (baseRef.current) baseRef.current.style.opacity = '0.35'
+    if (baseRef.current) baseRef.current.style.opacity = layout === 'landscape' ? '0' : '0.35'
   }
 
   return (
     <>
       <div
-        className="absolute bottom-0 left-0 z-10 h-[62%] w-[42%] touch-none"
+        className="absolute left-0 z-10 touch-none"
+        style={layout === 'portrait' ? { bottom: up, height: '40%', width: '62%' } : { bottom: 0, height: '62%', width: '42%' }}
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
@@ -122,8 +127,8 @@ export function TouchControls() {
           style={{
             width: RADIUS * 2,
             height: RADIUS * 2,
-            opacity: 0.35,
-            left: RADIUS * 2.6,
+            opacity: layout === 'landscape' ? 0 : 0.35,
+            left: layout === 'portrait' ? RADIUS * 0.5 : RADIUS * 2.6,
             // Resting low down, clear of the menu tiles above and the Wins and Muscle
             // in the corner.
             top: `calc(100% - ${RADIUS * 2.3}px)`,
@@ -142,7 +147,7 @@ export function TouchControls() {
           type="button"
           aria-label="Lift"
           className="pp-btn pp-chunky pp-pulse absolute z-20 flex touch-none flex-col items-center justify-center rounded-full"
-          style={{ ...roundButton(104, GRADIENTS.goldButton), right: 96, bottom: 12 }}
+          style={{ ...roundButton(104, GRADIENTS.goldButton), right: 96, bottom: `calc(${up} + 12px)` }}
           onPointerDown={(e) => {
             e.preventDefault()
             lift()
@@ -160,7 +165,7 @@ export function TouchControls() {
         type="button"
         aria-label="Jump"
         className="pp-btn pp-chunky absolute z-20 flex touch-none items-center justify-center rounded-full text-white"
-        style={{ ...roundButton(70, GRADIENTS.slate), right: 14, bottom: 14 }}
+        style={{ ...roundButton(70, GRADIENTS.slate), right: 14, bottom: `calc(${up} + 14px)` }}
         onPointerDown={(e) => {
           e.preventDefault()
           runtime.input.jump = true

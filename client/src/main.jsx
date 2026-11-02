@@ -7,6 +7,7 @@ import App from './App.jsx'
 import { installAudioUnlock, sfx } from './audio/sfx'
 import BloxityProvider from './bloxity/BloxityProvider.jsx'
 import { installDebugHooks } from './debug'
+import { preloadIcons } from './ui/icons'
 import './index.css'
 
 // Start-up milestones (pp:*) show up in DevTools' Performance panel and are read by
@@ -18,6 +19,9 @@ installAudioUnlock()
 window.addEventListener('pointerdown', (e) => {
   if (e.target instanceof Element && e.target.closest('.pp-btn')) sfx.click()
 })
+
+// Once the page is in, the HUD's icons are decoded in the background (see preloadIcons).
+window.addEventListener('load', () => setTimeout(preloadIcons, 3000), { once: true })
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

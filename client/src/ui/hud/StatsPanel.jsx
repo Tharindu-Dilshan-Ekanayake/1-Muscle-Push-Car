@@ -7,6 +7,8 @@ import { useGame } from '../../store/game'
 import useNow from '../useNow'
 import Icon from '../Icon'
 import StrokeText from '../StrokeText'
+import { useClearTop } from '../../bloxity/reserved'
+import { pick, useHudLayout } from './layout'
 import { GRADIENTS, u } from './style'
 
 /** Rebirths' colours: the pink and ice-blue of their arrows. */
@@ -91,9 +93,18 @@ export function StatsPanel() {
   const muscle = useGame((s) => s.profile.muscle)
   const rebirths = useGame((s) => s.profile.rebirths)
   const pushingVehicle = useGame((s) => s.climb === 'push')
+  const layout = useHudLayout()
+  const clear = useClearTop(0, 0.3)
+  // Bottom-left over the level bar. On a phone, up the left side just under Boxity's
+  // toolbar and chat (held upright, the menu below it; sideways, the menu's along the top).
+  const place = pick(layout, {
+    desktop: { left: u(20), bottom: u(120) },
+    landscape: { left: u(20), top: `calc(${u(10)} + ${clear}px)` },
+    portrait: { left: u(20), top: `calc(${u(10)} + ${clear}px)` },
+  })
 
   return (
-    <div className="pointer-events-none absolute flex flex-col" style={{ left: u(20), bottom: u(120) }}>
+    <div className="pointer-events-none absolute flex flex-col" style={place}>
       <Boosts />
       <StatRow icon="trophy" value={formatNumber(wins)} gradient={GRADIENTS.gold} flyTarget />
       {pushingVehicle ? <PowerRow /> : <StatRow icon="muscle" value={formatNumber(muscle)} />}

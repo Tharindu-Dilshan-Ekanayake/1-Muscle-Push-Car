@@ -22,3 +22,19 @@ export function useClearTop(from, to) {
     return Math.ceil(bottom)
   }, [reserved, from, to])
 }
+
+/**
+ * How far right Boxity's controls reach along the top `band` CSS pixels of the screen
+ * (its toolbar), in CSS pixels: a row of HUD along the top starts after it. 0 outside
+ * Boxity.
+ */
+export function useClearLeft(band) {
+  const reserved = useBloxityStore((s) => s.reserved)
+  return useMemo(() => {
+    let right = 0
+    for (const area of reserved ?? []) {
+      if ((Number(area?.top) || 0) < band) right = Math.max(right, (Number(area?.left) || 0) + (Number(area?.width) || 0))
+    }
+    return Math.ceil(right)
+  }, [reserved, band])
+}
